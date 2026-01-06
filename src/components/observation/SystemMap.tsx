@@ -1,41 +1,46 @@
 import { SystemEvent } from "@/lib/events";
 import { useEffect, useState } from "react";
+import EventFlow from "./EventFlow";
 
 type SystemMapProps = {
   events: SystemEvent[];
+  activeEvent: SystemEvent | null;
 };
 
-export default function SystemMap({ events }: SystemMapProps) {
+export default function SystemMap({ events, activeEvent }: SystemMapProps) {
   const [activeNodes, setActiveNodes] = useState<String[]>([]);
-
-  const lastEvent = events.at(-1);
+    
 
   useEffect(() => {
-    if (!lastEvent) return;
+    if (!activeEvent) return;
 
-    setActiveNodes([lastEvent.from, lastEvent.to]);
+    setActiveNodes([activeEvent.from, activeEvent.to]);
 
     const timer = setTimeout(() => {
       setActiveNodes([]);
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [events.length]);
+  }, [events.length, activeEvent]);
 
-  if (!lastEvent || lastEvent.type !== "MESSAGE_SENT") {
+  if (!activeEvent || activeEvent.type !== "MESSAGE_SENT") {
     return null;
   }
 
   const isUserActive = activeNodes.includes("User");
   const isMessengerActive = activeNodes.includes("Messenger_Window");
+  const direction = activeEvent.from === "User" ? "forward" : "backward";
 
   return (
     <div className="flex gap-4">
       <div className={isUserActive ? "bg-amber-300" : ""}>
-        [{lastEvent.from}]
+        [{activeEvent.from}]
       </div>
+
+      <EventFlow active={activeNodes.length > 0} direction={direction} />
+
       <div className={isMessengerActive ? "bg-amber-300" : ""}>
-        [{lastEvent.to}]
+        [{activeEvent.to}]
       </div>
     </div>
   );
