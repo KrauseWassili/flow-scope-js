@@ -15,7 +15,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [markers, setMarkers] = useState<Marker[]>([]);
 
-const activeEvent =
+  const activeEvent =
     mode === "live" ? events.at(-1) ?? null : events[replayIndex] ?? null;
 
   function handleSend1() {
@@ -46,8 +46,6 @@ const activeEvent =
     setEvents((prev) => [...prev, event]);
   }
 
-  
-
   function addMarker(eventId: string) {
     setMarkers((prev) => {
       if (prev.some((m) => m.eventId === eventId)) {
@@ -55,6 +53,14 @@ const activeEvent =
       }
       return [...prev, { eventId, createdAt: new Date() }];
     });
+  }
+
+  function jumpToEvent (eventId: string) {
+    if (mode !== "replay") return;
+    const index = events.findIndex(e => e.id===eventId);
+    if (index === -1) return;
+
+    setReplayIndex(index);
   }
 
   useEffect(() => {
@@ -74,7 +80,10 @@ const activeEvent =
   }, [isPlaying, mode, events.length]);
 
   const playbackControls: PlaybackControls = {
-    mode: () => (mode === "live" ? setMode("replay") : setMode("live")),
+    mode: () => {
+      setIsPlaying(false);
+      return mode === "live" ? setMode("replay") : setMode("live");
+    },
     play: () => setIsPlaying(true),
     pause: () => setIsPlaying(false),
     next: () => setReplayIndex((prev) => Math.min(prev + 1, events.length - 1)),
@@ -99,6 +108,7 @@ const activeEvent =
         isPlaying={isPlaying}
         activeEvent={activeEvent}
         markers={markers}
+        onJumpToEvent={jumpToEvent}
       />
     </main>
   );

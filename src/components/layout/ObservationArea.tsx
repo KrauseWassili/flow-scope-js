@@ -11,6 +11,7 @@ type ObservationAreaProps = {
   isPlaying: boolean;
   activeEvent: SystemEvent | null;
   markers: Marker[];
+  onJumpToEvent: (eventId: string) => void;
 };
 
 export default function ObservationArea({
@@ -20,6 +21,7 @@ export default function ObservationArea({
   isPlaying,
   activeEvent,
   markers,
+  onJumpToEvent,
 }: ObservationAreaProps) {
   
 
@@ -31,7 +33,7 @@ export default function ObservationArea({
       <p>Status: {isPlaying ? "Playing" : "Paused"}</p>
 
       <SystemMap events={events} activeEvent={activeEvent}/>
-      <EventTimeline events={events} mode={mode} activeEvent={activeEvent} markers={markers}/>
+      <EventTimeline events={events} mode={mode} activeEvent={activeEvent} markers={markers} onJumpToEvent={onJumpToEvent}/>
       <h3>User</h3>
       <h3>Messenger</h3>
       <h3>Redis</h3>

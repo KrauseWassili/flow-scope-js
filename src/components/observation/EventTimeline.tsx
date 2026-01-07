@@ -7,9 +7,16 @@ type EventTimelineProps = {
   activeEvent: SystemEvent | null;
   mode: "live" | "replay";
   markers: Marker[];
+  onJumpToEvent: (eventId: string) => void;
 };
 
-export default function EventTimeline({ events, activeEvent, mode, markers }: EventTimelineProps) {
+export default function EventTimeline({
+  events,
+  activeEvent,
+  mode,
+  markers,
+  onJumpToEvent,
+}: EventTimelineProps) {
   function getFormattedDate(date: Date) {
     return new Intl.DateTimeFormat("de-DE", {
       day: "2-digit",
@@ -26,10 +33,24 @@ export default function EventTimeline({ events, activeEvent, mode, markers }: Ev
     <div>
       <ul>
         {events.map((event) => {
-            const isActive = mode === "replay" && event.id === activeEvent?.id; 
-            const isMarked = markers.some((m) => m.eventId === event.id)
+          const isActive = mode === "replay" && event.id === activeEvent?.id;
+          const isMarked = markers.some((m) => m.eventId === event.id);
           return (
-            <li key={event.id} className={cn(isActive && "bg-amber-200", isMarked && "border-l-4 border-amber-500")}>
+            <li
+              key={event.id}
+              className={cn(
+                isMarked &&
+                  mode === "replay" &&
+                  "cursor-pointer hover:bg-amber-100",
+                isActive && "bg-amber-200",
+                isMarked && "border-l-4 border-amber-500"
+              )}
+              onClick={() => {
+                if (isMarked && mode == "replay") {
+                  onJumpToEvent(event.id);
+                }
+              }}
+            >
               <p>
                 [{getFormattedDate(event.timestamp)},{" "}
                 {getTimeString(event.timestamp)}]
