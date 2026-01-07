@@ -1,12 +1,15 @@
 import { SystemEvent } from "@/lib/events";
+import { Marker } from "@/lib/Markers";
+import { cn } from "@/lib/utils";
 
 type EventTimelineProps = {
   events: SystemEvent[];
   activeEvent: SystemEvent | null;
   mode: "live" | "replay";
+  markers: Marker[];
 };
 
-export default function EventTimeline({ events, activeEvent, mode }: EventTimelineProps) {
+export default function EventTimeline({ events, activeEvent, mode, markers }: EventTimelineProps) {
   function getFormattedDate(date: Date) {
     return new Intl.DateTimeFormat("de-DE", {
       day: "2-digit",
@@ -24,8 +27,9 @@ export default function EventTimeline({ events, activeEvent, mode }: EventTimeli
       <ul>
         {events.map((event) => {
             const isActive = mode === "replay" && event.id === activeEvent?.id; 
+            const isMarked = markers.some((m) => m.eventId === event.id)
           return (
-            <li key={event.id} className={isActive ? "bg-amber-200" : ""}>
+            <li key={event.id} className={cn(isActive && "bg-amber-200", isMarked && "border-l-4 border-amber-500")}>
               <p>
                 [{getFormattedDate(event.timestamp)},{" "}
                 {getTimeString(event.timestamp)}]

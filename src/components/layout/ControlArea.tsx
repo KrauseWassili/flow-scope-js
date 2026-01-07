@@ -1,3 +1,4 @@
+import { SystemEvent } from "@/lib/events";
 import { PlaybackControls } from "@/lib/playback";
 import React, { useState } from "react";
 
@@ -6,6 +7,8 @@ type ControlAreaProps = {
   onSend2: () => void;
   controls: PlaybackControls;
   mode: "live" | "replay";
+  activeEvent: SystemEvent | null;
+  addMarker: (arg0: string) => void;
 };
 
 export default function ControlArea({
@@ -13,6 +16,8 @@ export default function ControlArea({
   onSend2,
   controls,
   mode,
+  activeEvent,
+  addMarker,
 }: ControlAreaProps) {
   return (
     <div>
@@ -35,6 +40,7 @@ export default function ControlArea({
         <button onClick={() => controls.setSpeed(0.5)} className="w-10 h-8 border-2 bg-blue-300">0.5x</button>
         <button onClick={() => controls.setSpeed(1)} className="w-10 h-8 border-2 bg-blue-300">1</button>
         <button onClick={() => controls.setSpeed(2)} className="w-10 h-8 border-2 bg-blue-300">2</button>
+        <button onClick={() => activeEvent && addMarker(activeEvent.id)} disabled={!activeEvent} className="w-10 h-8 border-2 bg-blue-300">★ Mark</button>
       </div>
       <h3>Login (coming soon)</h3>
       <h3>Register (coming soon)</h3>

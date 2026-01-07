@@ -3,6 +3,7 @@
 import ControlArea from "@/components/layout/ControlArea";
 import ObservationArea from "@/components/layout/ObservationArea";
 import { SystemEvent } from "@/lib/events";
+import { Marker } from "@/lib/Markers";
 import { PlaybackControls } from "@/lib/playback";
 import { useEffect, useState } from "react";
 
@@ -12,6 +13,10 @@ export default function Home() {
   const [replayIndex, setReplayIndex] = useState(0);
   const [replaySpeed, setReplaySpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [markers, setMarkers] = useState<Marker[]>([]);
+
+const activeEvent =
+    mode === "live" ? events.at(-1) ?? null : events[replayIndex] ?? null;
 
   function handleSend1() {
     if (mode === "replay") return;
@@ -26,6 +31,7 @@ export default function Home() {
 
     setEvents((prev) => [...prev, event]);
   }
+
   function handleSend2() {
     if (mode === "replay") return;
     const event: SystemEvent = {
@@ -39,7 +45,17 @@ export default function Home() {
 
     setEvents((prev) => [...prev, event]);
   }
+
   
+
+  function addMarker(eventId: string) {
+    setMarkers((prev) => {
+      if (prev.some((m) => m.eventId === eventId)) {
+        return prev;
+      }
+      return [...prev, { eventId, createdAt: new Date() }];
+    });
+  }
 
   useEffect(() => {
     if (!isPlaying || mode !== "replay") return;
@@ -73,12 +89,16 @@ export default function Home() {
         onSend2={handleSend2}
         controls={playbackControls}
         mode={mode}
+        activeEvent={activeEvent}
+        addMarker={addMarker}
       />
       <ObservationArea
         events={events}
         mode={mode}
         replayIndex={replayIndex}
         isPlaying={isPlaying}
+        activeEvent={activeEvent}
+        markers={markers}
       />
     </main>
   );

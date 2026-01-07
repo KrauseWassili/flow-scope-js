@@ -2,12 +2,15 @@ import { SystemEvent } from "@/lib/events";
 import EventTimeline from "../observation/EventTimeline";
 import SystemMap from "../observation/SystemMap";
 import { useState } from "react";
+import { Marker } from "@/lib/Markers";
 
 type ObservationAreaProps = {
   events: SystemEvent[];
   mode: "live" | "replay";
   replayIndex: number;
   isPlaying: boolean;
+  activeEvent: SystemEvent | null;
+  markers: Marker[];
 };
 
 export default function ObservationArea({
@@ -15,9 +18,10 @@ export default function ObservationArea({
   mode,
   replayIndex,
   isPlaying,
+  activeEvent,
+  markers,
 }: ObservationAreaProps) {
-  const activeEvent =
-    mode === "live" ? events.at(-1) ?? null : events[replayIndex] ?? null;
+  
 
   return (
     <div>
@@ -27,7 +31,7 @@ export default function ObservationArea({
       <p>Status: {isPlaying ? "Playing" : "Paused"}</p>
 
       <SystemMap events={events} activeEvent={activeEvent}/>
-      <EventTimeline events={events} mode={mode} activeEvent={activeEvent} />
+      <EventTimeline events={events} mode={mode} activeEvent={activeEvent} markers={markers}/>
       <h3>User</h3>
       <h3>Messenger</h3>
       <h3>Redis</h3>
