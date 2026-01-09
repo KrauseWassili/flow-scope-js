@@ -1,11 +1,9 @@
-import { useObservedEvents } from "@/hooks/useObservedEvents";
-import { SystemEvent } from "@/lib/events";
 import { PlaybackControls } from "@/lib/playback";
-import React, { useEffect, useState } from "react";
 import MessengerPanel from "./MessengerPanel";
 import PlaybackPanel from "./PlaybackPanel";
 import AuthPanel from "./AuthPanel";
-import useMessages from "@/hooks/useMessages";
+import { useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 
 type ClientAreaProps = {
   controls: PlaybackControls;
@@ -36,7 +34,6 @@ function parseRedisMsg(raw: any[]): Message {
   };
 }
 
-
 export default function ClientArea({
   controls,
   mode,
@@ -45,15 +42,32 @@ export default function ClientArea({
   handleSend,
 }: ClientAreaProps) {
   const [tab, setTab] = useState<"messenger" | "playback" | "auth">("auth");
-  const { data, error, isLoading } = useMessages();
-  const messages = data ? data.map(parseRedisMsg) : [];
+  const [messages, setMessages] = useState<Message[]>([]);
+  const socketRef = useRef<Socket | null>(null);
   async function handleSendMessage(from: string, to: string, text: string) {
-    await fetch("/api/send-message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, text }),
-    });
+    if (socketRef.current) {
+      socketRef.current.emit("send_message", { from, to, text });
+    }
   }
+
+  useEffect(() => {
+    const socket = io("http://localhost:4000");
+    socketRef.current = socket;
+
+    socket.on("new_message", (raw) => {
+      setMessages((prev) => [...prev, parseRedisMsg(raw)]);
+    });
+
+    socket.on("message_history", (msgs) => {
+      setMessages(msgs.map(parseRedisMsg));
+    });
+
+    socket.emit("get_history");
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -70,8 +84,6 @@ export default function ClientArea({
                 selfId="user-1"
                 peerId="user-2"
                 messages={messages}
-                isLoading={isLoading}
-                error={error}
                 onSend={(text) => handleSendMessage("user-1", "user-2", text)}
               />
             </div>
@@ -80,8 +92,6 @@ export default function ClientArea({
                 selfId="user-2"
                 peerId="user-1"
                 messages={messages}
-                isLoading={isLoading}
-                error={error}
                 onSend={(text) => handleSendMessage("user-2", "user-1", text)}
               />
             </div>

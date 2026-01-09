@@ -4,8 +4,6 @@ type MessengerPanelProps = {
   selfId: string;
   peerId: string;
   messages: Message[];
-  isLoading: boolean;
-  error: boolean;
   onSend: (text: string) => void;
 };
 
@@ -17,14 +15,10 @@ type Message = {
   timestamp?: Date;
 };
 
-
-
 export default function MessengerPanel({
   selfId,
   peerId,
   messages,
-  isLoading,
-  error,
   onSend,
 }: MessengerPanelProps) {
   const [input, setInput] = useState("");
@@ -40,12 +34,11 @@ export default function MessengerPanel({
       (m.from === peerId && m.to === selfId)
   );
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Loading error</div>;
   return (
-    <div className="flex flex-col w-full h-full min-h-0 shadow-lg p-4">      
+    <div className="flex flex-col w-full h-full min-h-0 shadow-lg p-4">
       <div className="flex-1 flex flex-col-reverse overflow-y-auto space-y-2 pb-2">
         {[...filteredMessages].reverse().map((msg) => {
+
           const isSelf = msg.from === selfId;
           return (
             <div
