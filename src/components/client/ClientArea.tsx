@@ -10,7 +10,6 @@ type ClientAreaProps = {
   mode: "live" | "replay";
   replayIndex: number;
   isPlaying: boolean;
-  handleSend: (text: string) => void;
 };
 
 type Message = {
@@ -39,7 +38,6 @@ export default function ClientArea({
   mode,
   replayIndex,
   isPlaying,
-  handleSend,
 }: ClientAreaProps) {
   const [tab, setTab] = useState<"messenger" | "playback" | "auth">("auth");
   const [messages, setMessages] = useState<Message[]>([]);

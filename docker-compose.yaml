@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  ws-server:
+    build:
+      context: .
+      dockerfile: src/server/Dockerfile
+    container_name: ws-server
+    ports:
+      - "4000:4000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+

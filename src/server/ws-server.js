@@ -2,7 +2,9 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const Redis = require("ioredis");
 
-const redis = new Redis(); // localhost:6379
+const redisHost = process.env.REDIS_HOST || 'localhost';
+const redisPort = process.env.REDIS_PORT || 6379;
+const redis = new Redis(redisPort, redisHost);
 
 const httpServer = createServer();
 const io = new Server(httpServer, {

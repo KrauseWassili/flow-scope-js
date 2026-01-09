@@ -7,7 +7,7 @@ import { useEventsApi } from "@/hooks/useEventsApi";
 import { useObservedEvents } from "@/hooks/useObservedEvents";
 import { Marker } from "@/lib/Markers";
 import { PlaybackControls } from "@/lib/playback";
-import { SystemEventInput } from "@/lib/schemas/systemEvent";
+import { SystemEventInput } from "@/lib/shemas/systemEvent";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -44,18 +44,6 @@ export default function Home() {
     upsertDbEvents([withDate]);
 
     return withDate;
-  }
-
-  function handleSend(text: string) {
-    if (mode === "replay") return;
-    const event: SystemEventInput = {
-      type: "MESSAGE_SENT",
-      from: "User",
-      to: "Messenger_Window",
-      payload: { text: text },
-    };
-
-    sendEvent(event);
   }
 
   function addMarker(eventId: string) {
@@ -116,7 +104,6 @@ export default function Home() {
           mode={mode}
           replayIndex={replayIndex}
           isPlaying={isPlaying}
-          handleSend={handleSend}
         />
       </div>
       <div className="h-full min-h-0 flex flex-col">
