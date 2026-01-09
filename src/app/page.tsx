@@ -1,24 +1,27 @@
 "use client";
 
 import KeyboardControls from "@/components/KeyboardControls";
-import ControlArea from "@/components/layout/ControlArea";
-import ObservationArea from "@/components/layout/ObservationArea";
-import { SystemEvent } from "@/lib/events";
+import ClientArea from "@/components/client/ClientArea";
+import ObservationArea from "@/components/observation/ObservationArea";
+import { useEventsApi } from "@/hooks/useEventsApi";
+import { useObservedEvents } from "@/hooks/useObservedEvents";
 import { Marker } from "@/lib/Markers";
 import { PlaybackControls } from "@/lib/playback";
-import { SystemEventInput } from "@/lib/shemas/systemEvent";
+import { SystemEventInput } from "@/lib/schemas/systemEvent";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [events, setEvents] = useState<SystemEvent[]>([]);
   const [mode, setMode] = useState<"live" | "replay">("live");
   const [replayIndex, setReplayIndex] = useState(0);
   const [replaySpeed, setReplaySpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [markers, setMarkers] = useState<Marker[]>([]);
-
+  const { observedList, upsertDbEvents, markStage } = useObservedEvents();
+  const { data: events, refetch } = useEventsApi();
   const activeEvent =
-    mode === "live" ? events.at(-1) ?? null : events[replayIndex] ?? null;
+    mode === "live"
+      ? observedList.at(-1) ?? null
+      : observedList[replayIndex] ?? null;
 
   async function sendEvent(eventData: SystemEventInput) {
     const res = await fetch("/api/events", {
@@ -29,46 +32,30 @@ export default function Home() {
 
     if (!res.ok) {
       alert("send message error");
-      return;
+      throw new Error("Send event failed");
     }
 
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        type: eventData.type,
-        from: eventData.from,
-        to: eventData.to,
-        payload: eventData.payload,
-        timestamp: new Date(),
-      },
-    ]);
+    const event = await res.json();
+    const withDate = {
+      ...event,
+      timestamp: new Date(event.timestamp),
+    };
+
+    upsertDbEvents([withDate]);
+
+    return withDate;
   }
 
-  function handleSend1() {
+  function handleSend(text: string) {
     if (mode === "replay") return;
     const event: SystemEventInput = {
       type: "MESSAGE_SENT",
       from: "User",
       to: "Messenger_Window",
-      payload: { text: "Hello from FlowScope" },
+      payload: { text: text },
     };
 
     sendEvent(event);
-  }
-
-  function handleSend2() {
-    if (mode === "replay") return;
-    const event: SystemEvent = {
-      id: crypto.randomUUID(),
-      type: "MESSAGE_SENT",
-      from: "Messenger_Window",
-      to: "User",
-      payload: { text: "Hello from FlowScope" },
-      timestamp: new Date(),
-    };
-
-    setEvents((prev) => [...prev, event]);
   }
 
   function addMarker(eventId: string) {
@@ -82,24 +69,11 @@ export default function Home() {
 
   function jumpToEvent(eventId: string) {
     if (mode !== "replay") return;
-    const index = events.findIndex((e) => e.id === eventId);
+    const index = observedList.findIndex((e) => e.id === eventId);
     if (index === -1) return;
 
     setReplayIndex(index);
   }
-
-  useEffect(() => {
-    async function loadEvents() {
-      const res = await fetch("/api/events");
-      const data = await res.json();
-      const withDates = data.map((e: any) => ({
-        ...e,
-        timestamp: new Date(e.timestamp),
-      }));
-      setEvents(withDates);
-    }
-    loadEvents();
-  }, []);
 
   useEffect(() => {
     if (!isPlaying || mode !== "replay") return;
@@ -107,7 +81,7 @@ export default function Home() {
     const intervalMs = baseInterval / replaySpeed;
     const timer = setInterval(() => {
       setReplayIndex((prev) => {
-        if (prev >= events.length - 1) {
+        if (prev >= observedList.length - 1) {
           setIsPlaying(false);
           return prev;
         }
@@ -115,7 +89,11 @@ export default function Home() {
       });
     }, intervalMs);
     return () => clearInterval(timer);
-  }, [isPlaying, mode, events.length]);
+  }, [isPlaying, mode, observedList.length]);
+
+  useEffect(() => {
+    if (events) upsertDbEvents(events);
+  }, [events]);
 
   const playbackControls: PlaybackControls = {
     mode: () => {
@@ -124,13 +102,34 @@ export default function Home() {
     },
     play: () => setIsPlaying(true),
     pause: () => setIsPlaying(false),
-    next: () => setReplayIndex((prev) => Math.min(prev + 1, events.length - 1)),
+    next: () =>
+      setReplayIndex((prev) => Math.min(prev + 1, observedList.length - 1)),
     prev: () => setReplayIndex((prev) => Math.max(prev - 1, 0)),
     setSpeed: setReplaySpeed,
   };
 
   return (
     <main className="h-screen grid grid-cols-2">
+      <div className="h-full min-h-0 flex flex-col border-r">
+        <ClientArea
+          controls={playbackControls}
+          mode={mode}
+          replayIndex={replayIndex}
+          isPlaying={isPlaying}
+          handleSend={handleSend}
+        />
+      </div>
+      <div className="h-full min-h-0 flex flex-col">
+        <ObservationArea
+          events={observedList}
+          mode={mode}
+          isPlaying={isPlaying}
+          activeEvent={activeEvent}
+          markers={markers}
+          onJumpToEvent={jumpToEvent}
+        />
+      </div>
+
       <KeyboardControls
         mode={mode}
         isPlaying={isPlaying}
@@ -138,23 +137,6 @@ export default function Home() {
         activeEvent={activeEvent}
         controls={playbackControls}
         addMarker={addMarker}
-      />
-      <ControlArea
-        onSend1={handleSend1}
-        onSend2={handleSend2}
-        controls={playbackControls}
-        mode={mode}
-        activeEvent={activeEvent}
-        addMarker={addMarker}
-      />
-      <ObservationArea
-        events={events}
-        mode={mode}
-        replayIndex={replayIndex}
-        isPlaying={isPlaying}
-        activeEvent={activeEvent}
-        markers={markers}
-        onJumpToEvent={jumpToEvent}
       />
     </main>
   );

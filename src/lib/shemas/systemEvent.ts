@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const systemEventShema = z.object({
+export const systemEventSchema = z.object({
     type: z.literal("MESSAGE_SENT"),
     from: z.string(),
     to: z.string(),
@@ -9,4 +9,4 @@ export const systemEventShema = z.object({
     }),
 })
 
-export type SystemEventInput = z.infer<typeof systemEventShema>;
+export type SystemEventInput = z.infer<typeof systemEventSchema>;

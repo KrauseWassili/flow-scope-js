@@ -1,48 +1,32 @@
-import { SystemEvent } from "@/lib/events";
+import { useObservedEvents } from "@/hooks/useObservedEvents";
 import { PlaybackControls } from "@/lib/playback";
-import React, { useState } from "react";
+import { useState } from "react";
 
-type ControlAreaProps = {
-  onSend1: () => void;
-  onSend2: () => void;
+type PlaybackPanelProps = {
   controls: PlaybackControls;
   mode: "live" | "replay";
-  activeEvent: SystemEvent | null;
-  addMarker: (arg0: string) => void;
+  replayIndex: number;
+  isPlaying: boolean;
 };
 
-export default function ControlArea({
-  onSend1,
-  onSend2,
-  controls,
-  mode,
-  activeEvent,
-  addMarker,
-}: ControlAreaProps) {
+export default function PlaybackPanel({ controls, mode, replayIndex, isPlaying }: PlaybackPanelProps) {
+  const [tab, setTab] = useState<
+    "messenger" | "playback" | "login" | "register"
+  >("messenger");
+
   return (
     <div>
-      <h2>Control area</h2>
+      <h2>Playback panel</h2>
 
-      <h3>Messenger (coming soon)</h3>
+      <p>Current mode: {mode}</p>
+      <p>Replay index: {replayIndex}</p>
+      <p>Status: {isPlaying ? "Playing" : "Paused"}</p>
+
       <p className="text-xs text-gray-500 p-2">
         ␣ Play/Pause · ← → Step · ↑ ↓ Speed · M Mark
       </p>
 
       <div className="flex gap-2">
-        <button
-          onClick={onSend1}
-          disabled={mode === "replay"}
-          className="w-35 h-8 border-2 bg-blue-300"
-        >
-          Send message 1
-        </button>
-        <button
-          onClick={onSend2}
-          disabled={mode === "replay"}
-          className="w-35 h-8 border-2 bg-blue-300"
-        >
-          Send message 2
-        </button>
         <button
           onClick={controls.mode}
           className="w-30 h-8 border-2 bg-blue-300"
@@ -71,16 +55,7 @@ export default function ControlArea({
         >
           2
         </button>
-        <button
-          onClick={() => activeEvent && addMarker(activeEvent.id)}
-          disabled={!activeEvent}
-          className="w-20 h-8 border-2 bg-blue-300"
-        >
-          ★ Mark
-        </button>
       </div>
-      <h3>Login (coming soon)</h3>
-      <h3>Register (coming soon)</h3>
     </div>
   );
 }

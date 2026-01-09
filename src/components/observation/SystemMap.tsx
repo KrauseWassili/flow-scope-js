@@ -32,7 +32,7 @@ export default function SystemMap({ events, activeEvent }: SystemMapProps) {
   const direction = activeEvent.from === "User" ? "forward" : "backward";
 
   return (
-    <div className="flex gap-4">
+    <>
       <div className={isUserActive ? "bg-amber-300" : ""}>
         [{activeEvent.from}]
       </div>
@@ -42,6 +42,6 @@ export default function SystemMap({ events, activeEvent }: SystemMapProps) {
       <div className={isMessengerActive ? "bg-amber-300" : ""}>
         [{activeEvent.to}]
       </div>
-    </div>
+    </>
   );
 }
