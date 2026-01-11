@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { baseEventSchema } from "./baseEventSchema";
 
-export const messageExchangeSchema = z.object({
+export const messageExchangeSchema = baseEventSchema.extend({
   type: z.literal("MESSAGE_EXCHANGE"),
   from: z.string(),
   to: z.string(),
@@ -9,19 +10,19 @@ export const messageExchangeSchema = z.object({
   }),
 });
 
-export const userLoginSchema = z.object({
+export const userLoginSchema = baseEventSchema.extend({
   type: z.literal("USER_LOGIN"),
   userId: z.string(),
   method: z.enum(["password", "oauth"]),
 });
 
-export const userRegisterSchema = z.object({
+export const userRegisterSchema = baseEventSchema.extend({
   type: z.literal("USER_REGISTER"),
   userId: z.string(),
   email: z.string().email(),
 });
 
-export const userLogoutSchema = z.object({
+export const userLogoutSchema = baseEventSchema.extend({
   type: z.literal("USER_LOGOUT"),
   userId: z.string(),
 });

@@ -2,7 +2,7 @@ import { EventType } from "./sсhemas";
 
 
 export async function emitEvent<T extends EventType>(
-  event: { type: T } & Record<string, any>
+  event: { traceId: string; type: T } & Record<string, any>
 ) {
   await fetch("/api/events", {
     method: "POST",
@@ -10,3 +10,4 @@ export async function emitEvent<T extends EventType>(
     body: JSON.stringify(event),
   });
 }
+

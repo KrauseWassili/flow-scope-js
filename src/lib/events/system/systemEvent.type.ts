@@ -19,3 +19,10 @@ export type SystemEvent = {
   timestamp: number;
   payload?: Record<string, any>;
 };
+
+export type SystemEventInput = {
+  traceId: string;
+  type: EventType;
+  stage: EventStage;
+  payload?: Record<string, any>;
+};

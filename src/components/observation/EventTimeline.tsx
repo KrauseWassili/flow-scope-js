@@ -22,6 +22,9 @@ function getEventTime(event: ObservedEvent): Date | null {
 function PipelineRail({ event }: { event: ObservedEvent }) {
   const pipeline = EVENT_PIPELINES[event.type];
 
+  console.log("PIPELINE", pipeline);
+  console.log("STAGES", event.stages);
+
   if (!pipeline) {
     return (
       <div className="text-xs text-red-500">

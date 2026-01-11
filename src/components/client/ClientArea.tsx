@@ -9,6 +9,7 @@ import UserStatus from "./UserStatus";
 import { Profile } from "@/lib/profile";
 import ContactSelect from "./ContactSelect";
 import { emitEvent } from "@/lib/events/emitEvent";
+import { emitSystemEvent } from "@/lib/events/system/emitSystemEvent";
 
 type Message = {
   id: string;
@@ -88,8 +89,16 @@ export default function ClientArea() {
 
   const handleSendMessage = (to: string, text: string) => {
     if (!socket || !user) return;
+    const traceId = crypto.randomUUID();
+
+    emitSystemEvent({
+      traceId,
+      type: "MESSAGE_EXCHANGE",
+      stage: "client:emit",
+    });
 
     emitEvent({
+      traceId,
       type: "MESSAGE_EXCHANGE",
       from: user.id,
       to,

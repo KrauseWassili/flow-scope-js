@@ -49,7 +49,15 @@ sub.on("message", (channel, message) => {
   console.log("[WS] redis system-event", event);
 
   io.emit("system:event", event);
+
+  io.emit("system:event", {
+    traceId: event.traceId,
+    type: event.type,
+    stage: "ws:emitted",
+    timestamp: Date.now(),
+  });
 });
+
 
 /* =========================
    Supabase JWT (ES256 via JWKS)
