@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/auth/supabaseClient";
-import { sendTraceEvent } from "@/lib/trace/sendTraceEvent";
 
 type UserStatusProps = {
   onSetTab: () => void;
