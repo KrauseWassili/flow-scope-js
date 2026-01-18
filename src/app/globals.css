@@ -41,12 +41,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+
+.btn-home {
+  @apply w-45 px-6 py-3 border border-foreground rounded-md transition-colors
+    bg-background text-foreground hover:bg-foreground hover:text-background active:scale-95;
+  box-shadow: -1px 1px 1px 0 rgba(0, 0, 0, 0.35);
+  text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.05);
+}
+
 .btn {
   @apply w-24 h-10 p-2 shrink-0 border border-active rounded-md text-sm font-bold shadow transition
     bg-inactive text-foreground hover:bg-accent active:scale-95;
   box-shadow: -1px 1px 1px 0 rgba(0, 0, 0, 0.35);
   text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.05);
 }
+
 
 .link-btn {
   @apply h-10

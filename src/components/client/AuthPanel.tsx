@@ -46,7 +46,6 @@ export default function AuthPanel({ setTab }: AuthPanelProps) {
     if (error) {
       sendTraceEvent({
         traceId,
-        // type: mode === "login" ? "USER_LOGIN" : "USER_REGISTER",
         type: mode === "login" ? "USER_LOGIN" : "USER_REGISTER",
         node: "client_1",
         actorId: "",

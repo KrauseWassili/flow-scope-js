@@ -12,7 +12,10 @@ type ObservationAreaProps = {
   onClearEvents: () => void;
 };
 
-export default function ObservationArea({ events, onClearEvents }: ObservationAreaProps) {
+export default function ObservationArea({
+  events,
+  onClearEvents,
+}: ObservationAreaProps) {
   const replay = useReplay(events);
 
   const currentTraceId =
@@ -65,6 +68,12 @@ export default function ObservationArea({ events, onClearEvents }: ObservationAr
             mode={replay.mode}
             activeEvent={replay.activeEvent}
             onJumpToTrace={replay.jumpToTrace}
+            onSelectEvent={(event) =>
+              setInspectedEvent({
+                event,
+                node: event.node!,
+              })
+            }
           />
         </div>
 

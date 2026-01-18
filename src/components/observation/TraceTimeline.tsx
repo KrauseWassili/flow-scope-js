@@ -9,6 +9,7 @@ type TraceTimelineProps = {
   mode: "live" | "replay";
   activeEvent: TraceEvent | null;
   onJumpToTrace: (traceId: string) => void;
+  onSelectEvent: (event: TraceEvent) => void;
 };
 
 function getLampStates(events: TraceEvent[]) {
@@ -21,9 +22,12 @@ function getLampStates(events: TraceEvent[]) {
       hadError?: boolean;
     }
   > = {};
+
   for (const event of events) {
     if (!event.node || typeof event.timestamp !== "number") continue;
+
     const prev = state[event.node] || { wasActive: false, hadError: false };
+
     state[event.node] = {
       wasActive: true,
       lastOutcome: event.outcome ?? prev.lastOutcome,
@@ -31,16 +35,28 @@ function getLampStates(events: TraceEvent[]) {
       hadError: prev.hadError || event.outcome === "error",
     };
   }
+
   return state;
 }
+
+function getLastEventForNode(
+  events: TraceEvent[],
+  node: string
+): TraceEvent | undefined {
+  return [...events].reverse().find((e) => e.node === node);
+}
+
+type PipelineRailProps = {
+  events: TraceEvent[];
+  activeNode?: string | null;
+  onEventClick?: (event: TraceEvent) => void;
+};
 
 function PipelineRail({
   events,
   activeNode,
-}: {
-  events: TraceEvent[];
-  activeNode?: string | null;
-}) {
+  onEventClick,
+}: PipelineRailProps) {
   const nodeState = getLampStates(events);
 
   return (
@@ -48,11 +64,13 @@ function PipelineRail({
       {SYSTEM_NODES.map((node) => {
         const s = nodeState[node];
         const isActive = s?.wasActive;
+
         let colorClass = "bg-inactive";
         if (s?.hadError) colorClass = "bg-error";
         else if (isActive) colorClass = "bg-success";
 
-        const isActiveLamp = activeNode && activeNode === node;
+        const isActiveLamp = activeNode === node;
+        const eventForNode = getLastEventForNode(events, node);
 
         return (
           <div key={node} className="flex flex-col items-center min-w-16">
@@ -64,8 +82,14 @@ function PipelineRail({
             </span>
 
             <span
+              onClick={(e) => {
+                e.stopPropagation();
+                if (eventForNode) {
+                  onEventClick?.(eventForNode);
+                }
+              }}
               className={cn(
-                "w-4 h-4 rounded-full transition-all",
+                "w-4 h-4 rounded-full transition-all cursor-pointer",
                 colorClass,
                 "shadow-[-2px_2px_1px_rgba(0,0,0,0.45)]",
                 isActiveLamp &&
@@ -92,11 +116,9 @@ export default function TraceTimeline({
   mode,
   activeEvent,
   onJumpToTrace,
+  onSelectEvent,
 }: TraceTimelineProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  console.log("TIMELINE RENDER events ref", events);
-  console.log("TIMELINE RENDER events length", events.length);
 
   useEffect(() => {
     if (mode !== "live") return;
@@ -121,6 +143,7 @@ export default function TraceTimeline({
       <div className="flex justify-center px-2 text-sm font-semibold p-3 border-b border-border shrink-0 bg-panel">
         TRACE TIMELINE
       </div>
+
       {events.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-xs opacity-50">
           No events
@@ -132,7 +155,9 @@ export default function TraceTimeline({
               const isActiveRow =
                 mode === "replay" && activeEvent?.traceId === traceId;
 
-              const activeNode = isActiveRow ? activeEvent?.node ?? null : null;
+              const activeNode = isActiveRow
+                ? activeEvent?.node ?? null
+                : null;
 
               return (
                 <li
@@ -157,10 +182,15 @@ export default function TraceTimeline({
                     </span>
                   </div>
 
-                  <PipelineRail events={traceEvents} activeNode={activeNode} />
+                  <PipelineRail
+                    events={traceEvents}
+                    activeNode={activeNode}
+                    onEventClick={onSelectEvent}
+                  />
                 </li>
               );
             })}
+
             <div className="h-8" ref={bottomRef} />
           </ul>
         </div>

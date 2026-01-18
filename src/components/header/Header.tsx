@@ -25,8 +25,14 @@ export default function Header() {
         <Link href="/" className="link-btn">
           Home
         </Link>
-        <Link href="/faq" className="link-btn">
-          FAQ
+        <Link href="/app" className="link-btn">
+          App
+        </Link>
+        <Link href="/about" className="link-btn">
+          About
+        </Link>
+        <Link href="/usage" className="link-btn">
+          Usage
         </Link>
       </div>
 
