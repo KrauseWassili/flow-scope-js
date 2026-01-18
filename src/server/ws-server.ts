@@ -43,7 +43,17 @@ function unreadKey(userId: string, peerId: string) {
    HTTP + Socket.IO
 ========================= */
 
-const httpServer = createServer();
+const httpServer = createServer((req, res) => {
+  if (req.url === "/" || req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("FlowScope WS server is running");
+    return;
+  }
+
+  res.writeHead(404);
+  res.end();
+});
+
 
 const io = new Server(httpServer, {
   cors: {
@@ -398,12 +408,20 @@ io.on("connection", (socket: any) => {
    START SERVER
 ========================= */
 
-const PORT = +(process.env.WS_PORT || 4000);
+// const PORT = +(process.env.WS_PORT || 4000);
+const WS_PORT = 4000;
 
-httpServer.listen(PORT, () => {
-  console.log(`🚀 WebSocket server listening on port ${PORT}`);
+
+// httpServer.listen(WS_PORT, () => {
+//   console.log(`🚀 WebSocket server listening on port ${WS_PORT}`);
+//   startObservabilityConsumer();
+// });
+
+httpServer.listen(WS_PORT, "0.0.0.0", () => {
+  console.log(`🚀 WebSocket server listening on port ${WS_PORT}`);
   startObservabilityConsumer();
 });
+
 
 /* =========================
    GRACEFUL SHUTDOWN

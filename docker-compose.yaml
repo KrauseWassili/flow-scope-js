@@ -1,20 +1,37 @@
 version: "3.9"
 
 services:
+  caddy:
+    image: caddy:2
+    container_name: flowscope_caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy:/etc/caddy
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - ws-server
+
   redis:
     image: redis:7-alpine
     container_name: redis
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
 
   ws-server:
     build:
       context: ./src/server
       dockerfile: Dockerfile
     container_name: ws-server
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     env_file:
       - ./src/server/.env
     depends_on:
       - redis
+
+volumes:
+  caddy_data:
+  caddy_config:

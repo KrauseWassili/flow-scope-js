@@ -1,0 +1,3 @@
+flowscopejs.ddns.net {
+  reverse_proxy ws-server:4000
+}
