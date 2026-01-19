@@ -5,6 +5,14 @@ import { eventSchemas } from "@/lib/trace/sсhemas";
 const NEXT_PUBLIC_WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
 export async function POST(req: Request) {
+
+  console.log("[API][TRACE] HIT", {
+    url: req.url,
+    method: req.method,
+    ua: req.headers.get("user-agent"),
+    len: req.headers.get("content-length"),
+  });
+
   if (!NEXT_PUBLIC_WS_URL) {
     console.error("[API][TRACE] NEXT_PUBLIC_WS_URL is not defined");
     return NextResponse.json({ ok: false, reason: "trace_disabled" });

@@ -1,46 +1,52 @@
 import { TraceEvent } from "./sсhemas";
 
+function resolveTraceUrl(): string {
+  // 🟢 Browser
+  if (typeof window !== "undefined") {
+    return "/api/trace";
+  }
+
+  // 🟢 Server (Next / Node / Docker)
+  const base =
+    process.env.TRACE_API_BASE_URL || 
+    process.env.NEXT_PUBLIC_BASE_URL || // fallback
+    "http://localhost:3000";
+
+  return `${base}/api/trace`;
+}
 
 export function sendTraceEvent(event: TraceEvent): void {
-  /* =========================
-     🟢 BROWSER + sendBeacon
-     ========================= */
-  if (
-    typeof window !== "undefined" &&
-    typeof navigator !== "undefined" &&
-    typeof navigator.sendBeacon === "function"
-  ) {
+  const url = resolveTraceUrl();
+
+ 
+  console.log("[TRACE][SEND]", {
+    runtime: typeof window !== "undefined" ? "browser" : "server",
+    url,
+    type: event.type,
+    traceId: event.traceId,
+  });
+
+  // 🟢 Browser — sendBeacon
+  if (typeof window !== "undefined") {
     try {
-      const ok = navigator.sendBeacon(
-        "/api/trace",
+      navigator.sendBeacon(
+        url,
         new Blob([JSON.stringify(event)], {
           type: "application/json",
         })
       );
-
-      if (ok) {
-        return; 
-      }
-
-      console.warn("[TRACE] sendBeacon returned false, fallback to fetch", event);
     } catch (err) {
-      console.error("[TRACE] sendBeacon threw error, fallback to fetch", err, event);
+      console.error("[TRACE] sendBeacon error", err);
     }
+    return;
   }
 
-  /* =========================
-     🟡 FALLBACK: fetch
-     ========================= */
-  try {
-    fetch("/api/trace", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(event),
-      keepalive: true,
-    }).catch((err) => {
-      console.error("[TRACE] fetch fallback failed", err, event);
-    });
-  } catch (err) {
-    console.error("[TRACE] fetch invocation failed", err, event);
-  }
+  // 🟢 Server — fetch (absolute URL!)
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(event),
+  }).catch((err) => {
+    console.error("[TRACE] server fetch failed", err);
+  });
 }
