@@ -36,9 +36,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+    const socketUrl = process.env.NEXT_PUBLIC_WS_URL;
     if (!socketUrl) {
-      console.error("❌ NEXT_PUBLIC_SOCKET_URL is not defined");
+      console.error("❌ NEXT_PUBLIC_WS_URL is not defined");
       return;
     }
 

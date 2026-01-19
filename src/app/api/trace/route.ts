@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { isEventType } from "@/lib/events/guards/isEventType";
 import { eventSchemas } from "@/lib/trace/sсhemas";
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL;
+const NEXT_PUBLIC_WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
 export async function POST(req: Request) {
-  if (!WS_SERVER_URL) {
-    console.error("[API][TRACE] WS_SERVER_URL is not defined");
+  if (!NEXT_PUBLIC_WS_URL) {
+    console.error("[API][TRACE] NEXT_PUBLIC_WS_URL is not defined");
     return NextResponse.json({ ok: false, reason: "trace_disabled" });
   }
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const { traceId, type } = parsed.data;
   console.log("[API][TRACE INGEST]:", traceId, type);
 
-  console.log("[API][TRACE] forwarding to:", `${WS_SERVER_URL}/trace`);
+  console.log("[API][TRACE] forwarding to:", `${NEXT_PUBLIC_WS_URL}/trace`);
 
   console.log("[API][TRACE] will forward trace", {
     traceId,
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   });
 
   // 🔥 FIRE-AND-FORGET (КЛЮЧЕВОЕ ИЗМЕНЕНИЕ)
-  fetch(`${WS_SERVER_URL}/trace`, {
+  fetch(`${NEXT_PUBLIC_WS_URL}/trace`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(parsed.data),
