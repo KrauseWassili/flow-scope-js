@@ -169,11 +169,11 @@ export default function ClientArea() {
 
     const traceId = crypto.randomUUID();
 
-    socket.emit("message:send", {
-      to,
-      text,
-      trace: { traceId, type: "MESSAGE" },
-    });
+    // socket.emit("message:send", {
+    //   to,
+    //   text,
+    //   trace: { traceId, type: "MESSAGE" },
+    // });
 
     setTimeout(() => {
       sendTraceEvent({
