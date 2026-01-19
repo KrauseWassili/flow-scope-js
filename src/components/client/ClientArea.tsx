@@ -29,9 +29,6 @@ export default function ClientArea() {
     Record<string, Message[]>
   >({});
 
-  
-
-
   useEffect(() => {
     if (!socket) return;
 
@@ -171,36 +168,25 @@ export default function ClientArea() {
     if (!socket || !user) return;
 
     const traceId = crypto.randomUUID();
-    const type = "MESSAGE";
-
-    sendTraceEvent({
-      traceId: traceId,
-      type: type,
-      node: "client_1",
-      actorId: user.id,
-      dialogId: `${user.id}:${to}`,
-      payload: {
-        text,
-      },
-      outcome: "success",
-      timestamp: Date.now(),
-    });
-
-    console.log("[CHAT][out] message:send", {
-      socketConnected: socket.connected,
-      socketId: socket.id,
-      to,
-      text,
-    });
 
     socket.emit("message:send", {
       to,
       text,
-      trace: {
-        traceId: traceId,
-        type: type,
-      },
+      trace: { traceId, type: "MESSAGE" },
     });
+
+    setTimeout(() => {
+      sendTraceEvent({
+        traceId,
+        type: "MESSAGE",
+        node: "client_1",
+        actorId: user.id,
+        dialogId: `${user.id}:${to}`,
+        payload: { text },
+        outcome: "success",
+        timestamp: Date.now(),
+      });
+    }, 0);
   };
 
   if (loading) {
