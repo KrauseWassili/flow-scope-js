@@ -17,7 +17,6 @@ export default function AuthPanel({ setTab }: AuthPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   const signInGoogle = async () => {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
     setBusy(true);
     setError(null);
 
