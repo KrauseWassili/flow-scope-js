@@ -24,9 +24,9 @@ export function MessengerSocketProvider({
       return;
     }
 
-    const url = process.env.NEXT_PUBLIC_MESSENGER_WS_URL;
+    const url = process.env.NEXT_PUBLIC_WS_URL;
     if (!url) {
-      console.error("❌ NEXT_PUBLIC_MESSENGER_WS_URL is not defined");
+      console.error("❌ NEXT_PUBLIC_WS_URL is not defined");
       return;
     }
 
