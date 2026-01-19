@@ -1,15 +1,15 @@
 import { TraceEvent } from "./sсhemas";
 
-/**
- * Универсальная отправка trace-событий:
- * - browser → sendBeacon (best-effort, не дропается)
- * - server  → fetch (Node / API / Docker)
- */
+
 export function sendTraceEvent(event: TraceEvent): void {
   /* =========================
-     🟢 BROWSER
+     🟢 BROWSER + sendBeacon
      ========================= */
-  if (typeof window !== "undefined") {
+  if (
+    typeof window !== "undefined" &&
+    typeof navigator !== "undefined" &&
+    typeof navigator.sendBeacon === "function"
+  ) {
     try {
       const ok = navigator.sendBeacon(
         "/api/trace",
@@ -18,28 +18,29 @@ export function sendTraceEvent(event: TraceEvent): void {
         })
       );
 
-      if (!ok) {
-        console.warn("[TRACE] sendBeacon rejected payload", event);
+      if (ok) {
+        return; 
       }
-    } catch (err) {
-      console.error("[TRACE] sendBeacon error", err, event);
-    }
 
-    return;
+      console.warn("[TRACE] sendBeacon returned false, fallback to fetch", event);
+    } catch (err) {
+      console.error("[TRACE] sendBeacon threw error, fallback to fetch", err, event);
+    }
   }
 
   /* =========================
-     🟢 SERVER (Node / API / Docker)
+     🟡 FALLBACK: fetch
      ========================= */
-  const url =
-    process.env.TRACE_API_URL ||
-    "http://localhost:3000/api/trace";
-
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(event),
-  }).catch((err) => {
-    console.error("[TRACE] server fetch failed", err, event);
-  });
+  try {
+    fetch("/api/trace", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(event),
+      keepalive: true,
+    }).catch((err) => {
+      console.error("[TRACE] fetch fallback failed", err, event);
+    });
+  } catch (err) {
+    console.error("[TRACE] fetch invocation failed", err, event);
+  }
 }
