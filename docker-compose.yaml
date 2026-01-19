@@ -14,11 +14,23 @@ services:
     depends_on:
       - ws-server
 
-  redis:
+  redis-chat:
     image: redis:7-alpine
-    container_name: redis
+    container_name: redis-chat
     expose:
       - "6379"
+    volumes:
+      - redis-chat-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+  redis-obs:
+    image: redis:7-alpine
+    container_name: redis-obs
+    expose:
+      - "6379"
+    volumes:
+      - redis-obs-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
 
   ws-server:
     build:
@@ -26,12 +38,16 @@ services:
       dockerfile: Dockerfile
     container_name: ws-server
     expose:
-      - "4000"
+      - "4000"   # messenger
+      - "4001"   # events + /trace
     env_file:
       - ./src/server/.env
     depends_on:
-      - redis
+      - redis-chat
+      - redis-obs
 
 volumes:
   caddy_data:
   caddy_config:
+  redis-chat-data:
+  redis-obs-data:

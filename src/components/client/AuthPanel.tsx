@@ -20,10 +20,12 @@ export default function AuthPanel({ setTab }: AuthPanelProps) {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     setBusy(true);
     setError(null);
-    const traceId = crypto.randomUUID();
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/app`,
+      },
     });
 
     if (error) {
@@ -38,7 +40,7 @@ export default function AuthPanel({ setTab }: AuthPanelProps) {
 
     const traceId = crypto.randomUUID();
 
-    const { error, data } =
+    const { error } =
       mode === "login"
         ? await supabase.auth.signInWithPassword({ email, password })
         : await supabase.auth.signUp({ email, password });

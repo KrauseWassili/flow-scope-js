@@ -8,13 +8,22 @@ export function useReplay(events: TraceEvent[]) {
 
   const [index, setIndex] = useState(0);
 
-  const playedEvents = events.slice(0, index);
+  const sortedEvents = [...events].sort((a, b) => {
+    if (a.timestamp !== b.timestamp) {
+      return (a.timestamp ?? 0) - (b.timestamp ?? 0);
+    }
+    return a.node.localeCompare(b.node);
+  });
 
-  const activeEvent = mode === "replay" && index > 0 ? events[index - 1] : null;
+  const playedEvents = sortedEvents.slice(0, index);
+
+  const activeEvent =
+    mode === "replay" && index > 0 ? sortedEvents[index - 1] : null;
 
   function jumpToTrace(traceId: string) {
     console.log("jumpToTrace");
-    const targetIndex = events.findIndex((e) => e.traceId === traceId);
+    const targetIndex = sortedEvents.findIndex((e) => e.traceId === traceId);
+
     if (targetIndex !== -1) {
       setIsPlaying(false);
       setIndex(targetIndex + 1);

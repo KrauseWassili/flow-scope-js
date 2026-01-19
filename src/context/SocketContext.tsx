@@ -28,55 +28,76 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const clearedAtRef = useRef(0);
 
   useEffect(() => {
-    if (loading) return;
-
-    // logout → всё сбрасываем
-    if (!session?.access_token) {
-      setSocket((prev) => {
-        prev?.disconnect();
-        return null;
-      });
+    // --- teardown when not authenticated ---
+    if (loading || !session?.access_token) {
+      socket?.disconnect();
+      setSocket(null);
       setEvents([]);
       return;
     }
 
-    const s = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+    if (!socketUrl) {
+      console.error("❌ NEXT_PUBLIC_SOCKET_URL is not defined");
+      return;
+    }
+
+    console.log("🔌 creating EVENTS socket:", socketUrl);
+
+    const s = io(socketUrl, {
+      path: "/events/socket.io", // 👈 соответствует Caddy
       transports: ["websocket"],
       auth: { token: session.access_token },
     });
 
-    console.log("🔌 creating socket");
-
-    s.on("system:history", (history: TraceEvent[]) => {
-      setEvents([...history]); // новая ссылка
+    // --- connection lifecycle logs ---
+    s.on("connect", () => {
+      console.log("✅ [EVENTS SOCKET] connected", {
+        id: s.id,
+        transport: s.io.engine.transport.name,
+      });
     });
 
+    s.on("connect_error", (err) => {
+      console.log("❌ [EVENTS SOCKET] connect_error", {
+        message: err?.message,
+        name: err?.name,
+        data: (err as any)?.data,
+      });
+    });
+
+    s.on("disconnect", (reason) => {
+      console.log("⚠️ [EVENTS SOCKET] disconnected", reason);
+    });
+
+    // --- system history (snapshot) ---
+    s.on("system:history", (history: TraceEvent[]) => {
+      setEvents(history);
+    });
+
+    // --- realtime event ---
     s.on("system:event", (event: TraceEvent) => {
       if (event.timestamp <= clearedAtRef.current) return;
       setEvents((prev) => [...prev, event]);
     });
 
+    // --- clear ---
     s.on("system:cleared", () => {
       clearedAtRef.current = Date.now();
       setEvents([]);
-      console.log("setEvents[]");
     });
 
     setSocket(s);
 
     return () => {
-      console.log("🧹 destroying socket");
+      console.log("🧹 destroying EVENTS socket");
       s.disconnect();
     };
   }, [loading, session?.access_token]);
 
   const clearEvents = () => {
-    // 🔥 МГНОВЕННО чистим локальный UI
     clearedAtRef.current = Date.now();
     setEvents([]);
-    console.log("setEvents[] (local)");
-
-    // 🔁 асинхронно сообщаем серверу
     socket?.emit("system:clear");
   };
 

@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useSocket } from "@/context/SocketContext";
 import MessengerPanel from "./MessengerPanel";
 import AuthPanel from "./AuthPanel";
 import UserStatus from "./UserStatus";
 import { Profile } from "@/lib/auth/profile";
 import PeerSelect from "./PeerSelect";
 import { sendTraceEvent } from "@/lib/trace/sendTraceEvent";
+import { useMessengerSocket } from "@/context/MessengerSocketContext";
 
 type Message = {
   id: string;
@@ -20,7 +20,7 @@ type Message = {
 
 export default function ClientArea() {
   const { user, loading } = useAuth();
-  const { socket } = useSocket();
+  const socket = useMessengerSocket();
 
   const [users, setUsers] = useState<Profile[]>([]);
   const [tab, setTab] = useState<"messenger" | "auth">("messenger");
@@ -29,16 +29,79 @@ export default function ClientArea() {
     Record<string, Message[]>
   >({});
 
+  
+
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const onConnect = () => {
+      console.log("[CHAT][socket] connect", {
+        id: socket.id,
+        transport: socket.io.engine?.transport?.name,
+      });
+    };
+
+    const onDisconnect = (reason: any) => {
+      console.log("[CHAT][socket] disconnect", { id: socket.id, reason });
+    };
+
+    const onConnectError = (err: any) => {
+      console.log("[CHAT][socket] connect_error", err?.message ?? err);
+    };
+
+    const onReconnectAttempt = (n: number) => {
+      console.log("[CHAT][socket] reconnect_attempt", n);
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.io.on("error", onConnectError);
+    socket.io.on("reconnect_attempt", onReconnectAttempt);
+
+    // лог сразу, если уже подключен
+    if (socket.connected) onConnect();
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.io.off("error", onConnectError);
+      socket.io.off("reconnect_attempt", onReconnectAttempt);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const anyListener = (event: string, ...args: any[]) => {
+      console.log("[CHAT][in]", event, ...args);
+    };
+
+    socket.onAny(anyListener);
+
+    return () => {
+      socket.offAny(anyListener);
+    };
+  }, [socket]);
+
   useEffect(() => {
     if (!socket || !user) return;
 
     const onNewMessage = (msg: Message) => {
       const peer = msg.from === user.id ? msg.to : msg.from;
 
-      setMessagesByPeer((prev) => ({
-        ...prev,
-        [peer]: [...(prev[peer] ?? []), msg],
-      }));
+      setMessagesByPeer((prev) => {
+        const existing = prev[peer] ?? [];
+
+        if (existing.some((m) => m.id === msg.id)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [peer]: [...existing, msg],
+        };
+      });
     };
 
     const onDialogHistory = ({
@@ -48,10 +111,12 @@ export default function ClientArea() {
       peerId: string;
       messages: Message[];
     }) => {
-      setMessagesByPeer((prev) => ({
-        ...prev,
-        [peerId]: messages,
-      }));
+      setMessagesByPeer((prev) => {
+        return {
+          ...prev,
+          [peerId]: messages,
+        };
+      });
     };
 
     const onDialogCleared = ({ peerId }: { peerId: string }) => {
@@ -89,7 +154,6 @@ export default function ClientArea() {
     if (!user) return;
     const timeout = setTimeout(() => {
       const traceId = crypto.randomUUID();
-      const type = "USER_SELECT";
 
       fetch(`/api/peers?selfId=${user.id}`, {
         headers: {
@@ -120,6 +184,13 @@ export default function ClientArea() {
       },
       outcome: "success",
       timestamp: Date.now(),
+    });
+
+    console.log("[CHAT][out] message:send", {
+      socketConnected: socket.connected,
+      socketId: socket.id,
+      to,
+      text,
     });
 
     socket.emit("message:send", {
@@ -189,7 +260,7 @@ export default function ClientArea() {
             </div>
           ))}
 
-        {tab === "auth" && <AuthPanel setTab = {setTab}/>}
+        {tab === "auth" && <AuthPanel setTab={setTab} />}
       </div>
     </div>
   );

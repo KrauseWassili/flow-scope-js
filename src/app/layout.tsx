@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Providers from "./providers";
 import Header from "@/components/header/Header";
+import ClientProviders from "./client-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +15,6 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://flowscopejs.dev"),
-
   title: "FlowScope JS",
   description: "Inspect backend flows and traces",
 
@@ -61,20 +59,20 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body
         className={`
-          ${geistSans.variable}
-          ${geistMono.variable}
-          antialiased
-          h-full
-          bg-zinc-950
-          text-zinc-100
-        `}
+    ${geistSans.variable}
+    ${geistMono.variable}
+    antialiased
+    h-full
+    bg-zinc-950
+    text-zinc-100
+  `}
       >
-        <Providers>
+        <ClientProviders>
           <div className="h-screen flex flex-col">
             <Header />
             {children}
           </div>
-        </Providers>
+        </ClientProviders>
       </body>
     </html>
   );

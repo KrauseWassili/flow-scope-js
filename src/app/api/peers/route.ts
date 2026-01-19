@@ -9,6 +9,8 @@ export async function GET(req: Request) {
   const type = "USER_SELECT";
   const node = "api";
 
+
+
   if (!selfId) {
     sendTraceEvent({
       traceId,
@@ -24,17 +26,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "selfId is required" }, { status: 400 });
   }
 
-//   sendTraceEvent({
-//     traceId,
-//     type,
-//     node,
-//     actorId: selfId,
-//     payload: {
-//       entity: "peers",
-//     },
-//     outcome: "success",
-//     timestamp: Date.now(),
-//   });
+  sendTraceEvent({
+    traceId,
+    type,
+    node,
+    actorId: selfId,
+    payload: {
+      entity: "peers",
+    },
+    outcome: "success",
+    timestamp: Date.now(),
+  });
 
   const users = await loadPeers(selfId, traceId);
   return NextResponse.json(users);
