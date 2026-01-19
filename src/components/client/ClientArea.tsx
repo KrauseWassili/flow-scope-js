@@ -169,24 +169,24 @@ export default function ClientArea() {
 
     const traceId = crypto.randomUUID();
 
-    // socket.emit("message:send", {
-    //   to,
-    //   text,
-    //   trace: { traceId, type: "MESSAGE" },
-    // });
+    socket.emit("message:send", {
+      to,
+      text,
+      trace: { traceId, type: "MESSAGE" },
+    });
 
-    setTimeout(() => {
-      sendTraceEvent({
-        traceId,
-        type: "MESSAGE",
-        node: "client_1",
-        actorId: user.id,
-        dialogId: `${user.id}:${to}`,
-        payload: { text },
-        outcome: "success",
-        timestamp: Date.now(),
-      });
-    }, 0);
+    // setTimeout(() => {
+    //   sendTraceEvent({
+    //     traceId,
+    //     type: "MESSAGE",
+    //     node: "client_1",
+    //     actorId: user.id,
+    //     dialogId: `${user.id}:${to}`,
+    //     payload: { text },
+    //     outcome: "success",
+    //     timestamp: Date.now(),
+    //   });
+    // }, 0);
   };
 
   if (loading) {

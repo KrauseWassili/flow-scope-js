@@ -329,158 +329,185 @@ messengerIO.on("connection", (socket: any) => {
 
   /* ---- message:send (без логических изменений) ---- */
   socket.on(
-    "message:send",
-    async ({
+  "message:send",
+  async ({
+    to,
+    text,
+    trace,
+  }: {
+    to: string;
+    text: string;
+    trace?: { traceId: string };
+  }) => {
+    const traceId = trace?.traceId || crypto.randomUUID();
+    const type = "MESSAGE";
+
+    console.log("[WS][CHAT] message:send recv", {
+      socketId: socket.id,
+      userId,
+      to,
+      textLen: text?.length,
+    });
+
+    /* =========================
+       ❌ VALIDATION
+       ========================= */
+    if (!to || !text) {
+      sendTraceEvent({
+        traceId,
+        type,
+        node: "ws",
+        actorId: userId,
+        dialogId: to ? `${userId}:${to}` : undefined,
+        outcome: "error",
+        timestamp: Date.now(),
+        payload: { text },
+        error: { message: "Missing 'to' or 'text' in message" },
+      });
+      return;
+    }
+
+    /* =========================
+       🟢 PHASE 1: CLIENT INTENT (ingress)
+       ========================= */
+    sendTraceEvent({
+        traceId,
+        type: "MESSAGE",
+        node: "client_1",
+        actorId: userId,
+        dialogId: `${userId}:${to}`,
+        payload: { text },
+        outcome: "success",
+        timestamp: Date.now(),
+      });
+
+    /* =========================
+       🔀 PHASE BOUNDARY
+       ========================= */
+    await Promise.resolve();
+    // ↑ гарантированная граница фаз (microtask)
+
+    /* =========================
+       🟢 PHASE 2: WS PROCESSING
+       ========================= */
+    sendTraceEvent({
+      traceId,
+      type,
+      node: "ws",
+      actorId: userId,
+      dialogId: `${userId}:${to}`,
+      outcome: "success",
+      timestamp: Date.now(),
+      payload: { text: "Server" },
+    });
+
+    const timestamp = new Date().toISOString();
+    const stream = dialogKey(userId, to);
+
+    let messageId: string;
+
+    try {
+      /* =========================
+         🟢 REDIS WRITE
+         ========================= */
+      const id = await redisChat.xadd(
+        stream,
+        "*",
+        "from",
+        userId,
+        "to",
+        to,
+        "text",
+        text,
+        "timestamp",
+        timestamp
+      );
+
+      if (!id) {
+        throw new Error("Redis xadd returned null");
+      }
+      messageId = id;
+
+      console.log("[WS][CHAT] redis xadd ok", {
+        stream,
+        id: messageId,
+      });
+
+      await redisChat.sadd(dialogsSet(userId), to);
+      await redisChat.sadd(dialogsSet(to), userId);
+      await redisChat.incr(unreadKey(to, userId));
+
+      sendTraceEvent({
+        traceId,
+        type,
+        node: "redis",
+        actorId: userId,
+        dialogId: `${userId}:${to}`,
+        outcome: "success",
+        timestamp: Date.now(),
+        payload: { text },
+      });
+    } catch (redisErr: any) {
+      sendTraceEvent({
+        traceId,
+        type,
+        node: "redis",
+        actorId: userId,
+        dialogId: `${userId}:${to}`,
+        outcome: "error",
+        timestamp: Date.now(),
+        payload: { text },
+        error: { message: redisErr.message },
+      });
+      return;
+    }
+
+    /* =========================
+       🟢 EMIT TO CLIENTS
+       ========================= */
+    const message = {
+      id: messageId,
+      from: userId,
       to,
       text,
-      trace,
-    }: {
-      to: string;
-      text: string;
-      trace?: { traceId: string };
-    }) => {
-      const traceId = trace?.traceId || crypto.randomUUID();
-      const type = "MESSAGE";
+      timestamp,
+    };
 
-      console.log("[WS][CHAT] message:send recv", {
-        socketId: socket.id,
-        userId,
-        to,
-        textLen: text?.length,
+    console.log("[WS][CHAT] emit message:new", {
+      toRooms: [userId, to],
+      messageId,
+    });
+
+    try {
+      messengerIO.to(userId).emit("message:new", message);
+      messengerIO.to(to).emit("message:new", message);
+
+      sendTraceEvent({
+        traceId,
+        type,
+        node: "client_2",
+        actorId: userId,
+        dialogId: `${userId}:${to}`,
+        outcome: "success",
+        timestamp: Date.now(),
+        payload: { text },
       });
-
-      if (!to || !text) {
-        sendTraceEvent({
-          traceId,
-          type,
-          node: "ws",
-          actorId: userId,
-          dialogId: to ? `${userId}:${to}` : undefined,
-          outcome: "error",
-          timestamp: Date.now(),
-          payload: { text },
-          error: { message: "Missing 'to' or 'text' in message" },
-        });
-        return;
-      }
-
-      const timestamp = new Date().toISOString();
-      const stream = dialogKey(userId, to);
-
-      let messageId: string;
-
-      try {
-        // ---- trace: ws start ----
-        sendTraceEvent({
-          traceId,
-          type,
-          node: "ws",
-          actorId: userId,
-          dialogId: `${userId}:${to}`,
-          outcome: "success",
-          timestamp: Date.now(),
-          payload: { text: "Server" },
-        });
-
-        // ---- redis write ----
-        const id = await redisChat.xadd(
-          stream,
-          "*",
-          "from",
-          userId,
-          "to",
-          to,
-          "text",
-          text,
-          "timestamp",
-          timestamp
-        );
-
-        if (!id) {
-          throw new Error("Redis xadd returned null");
-        }
-        messageId = id;
-
-        console.log("[WS][CHAT] redis xadd ok", {
-          stream,
-          id: messageId,
-        });
-
-        await redisChat.sadd(dialogsSet(userId), to);
-        await redisChat.sadd(dialogsSet(to), userId);
-        await redisChat.incr(unreadKey(to, userId));
-
-        // ---- trace: redis success ----
-        sendTraceEvent({
-          traceId,
-          type,
-          node: "redis",
-          actorId: userId,
-          dialogId: `${userId}:${to}`,
-          outcome: "success",
-          timestamp: Date.now(),
-          payload: { text },
-        });
-      } catch (redisErr: any) {
-        sendTraceEvent({
-          traceId,
-          type,
-          node: "redis",
-          actorId: userId,
-          dialogId: `${userId}:${to}`,
-          outcome: "error",
-          timestamp: Date.now(),
-          payload: { text },
-          error: { message: redisErr.message },
-        });
-
-        // пробрасываем ошибку дальше
-        return;
-      }
-
-      const message = {
-        id: messageId,
-        from: userId,
-        to,
-        text,
-        timestamp,
-      };
-
-      console.log("[WS][CHAT] emit message:new", {
-        toRooms: [userId, to],
-        messageId,
+    } catch (emitErr: any) {
+      sendTraceEvent({
+        traceId,
+        type,
+        node: "client_receive",
+        actorId: userId,
+        dialogId: `${userId}:${to}`,
+        outcome: "error",
+        timestamp: Date.now(),
+        payload: { text },
+        error: { message: emitErr.message },
       });
-
-      try {
-        messengerIO.to(userId).emit("message:new", message);
-        messengerIO.to(to).emit("message:new", message);
-
-        // ---- trace: client success ----
-        sendTraceEvent({
-          traceId,
-          type,
-          node: "client_2",
-          actorId: userId,
-          dialogId: `${userId}:${to}`,
-          outcome: "success",
-          timestamp: Date.now(),
-          payload: { text },
-        });
-      } catch (emitErr: any) {
-        sendTraceEvent({
-          traceId,
-          type,
-          node: "client_receive",
-          actorId: userId,
-          dialogId: `${userId}:${to}`,
-          outcome: "error",
-          timestamp: Date.now(),
-          payload: { text },
-          error: { message: emitErr.message },
-        });
-      }
     }
-  );
+  }
+);
+
 });
 
 /* =========================
