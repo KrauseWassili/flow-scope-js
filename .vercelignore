@@ -1,0 +1,6 @@
+# ws server
+src/server/**
+
+# infra
+caddy/**
+docker-compose.yml
