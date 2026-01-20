@@ -89,7 +89,7 @@ function PipelineRail({
                 }
               }}
               className={cn(
-                "w-4 h-4 rounded-full transition-all cursor-pointer",
+                "w-5 h-5 rounded-full transition-all cursor-pointer",
                 colorClass,
                 "shadow-[-2px_2px_1px_rgba(0,0,0,0.45)]",
                 isActiveLamp &&

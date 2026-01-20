@@ -175,18 +175,7 @@ export default function ClientArea() {
       trace: { traceId, type: "MESSAGE" },
     });
 
-    // setTimeout(() => {
-    //   sendTraceEvent({
-    //     traceId,
-    //     type: "MESSAGE",
-    //     node: "client_1",
-    //     actorId: user.id,
-    //     dialogId: `${user.id}:${to}`,
-    //     payload: { text },
-    //     outcome: "success",
-    //     timestamp: Date.now(),
-    //   });
-    // }, 0);
+    
   };
 
   if (loading) {
