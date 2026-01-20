@@ -6,23 +6,19 @@ The project makes asynchronous processes **observable, reproducible, and analyza
 
 ---
 
-
 ## 🔗 Live Demo
 
-<<<<<<< HEAD
-https://flow-scope-js.vercel.app/
-=======
 [https://flowscopejs.vercel.app](https://flow-scope-js.vercel.app/)
->>>>>>> 85c6d258a3a41eb1d769515dd5056b5114cb8b6c
 
 ## 📷 Screenshots
 
 ### Main Interface
+
 ![Main Interface](./screenshots/home.png)
 
 ### Process Visualization
-![Process Visualization](./screenshots/app.png)
 
+![Process Visualization](./screenshots/app.png)
 
 ## 🎯 Project Purpose
 
