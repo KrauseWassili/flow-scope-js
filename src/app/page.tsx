@@ -6,12 +6,15 @@ export default function Page() {
     <main className="flex flex-1 items-center justify-center px-6">
       <div className="max-w-2xl w-full text-center space-y-8">
         {/* Title */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
             FlowScope JS
           </h1>
           <p className="text-title text-lg md:text-xl">
             Inspect backend flows and traces in real time
+          </p>
+          <p className="text-title text-sm opacity-80">
+            Built for backend and full-stack developers debugging complex flows
           </p>
         </div>
 

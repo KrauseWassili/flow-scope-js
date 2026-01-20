@@ -14,9 +14,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://flow-scope-js.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+
   title: "FlowScope JS",
   description: "Inspect backend flows and traces",
+
+  alternates: {
+    canonical: "/",
+  },
 
   icons: {
     icon: [
@@ -29,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "FlowScope JS",
     description: "Inspect backend flows and traces",
-    url: "https://flowscopejs.dev",
+    url: siteUrl,
     siteName: "FlowScope JS",
     images: [
       {
@@ -59,13 +68,13 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body
         className={`
-    ${geistSans.variable}
-    ${geistMono.variable}
-    antialiased
-    h-full
-    bg-zinc-950
-    text-zinc-100
-  `}
+          ${geistSans.variable}
+          ${geistMono.variable}
+          antialiased
+          h-full
+          bg-zinc-950
+          text-zinc-100
+        `}
       >
         <ClientProviders>
           <div className="h-screen flex flex-col">
