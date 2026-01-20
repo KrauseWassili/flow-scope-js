@@ -6,6 +6,20 @@ The project makes asynchronous processes **observable, reproducible, and analyza
 
 ---
 
+
+## 🔗 Live Demo
+
+https://flowscopejs.vercel.app
+
+## 📷 Screenshots
+
+### Main Interface
+![Main Interface](./screenshots/home.png)
+
+### Process Visualization
+![Process Visualization](./screenshots/app.png)
+
+
 ## 🎯 Project Purpose
 
 When developing asynchronous backend systems (WebSocket, events, queues, background processes), it is often difficult to:
