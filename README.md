@@ -196,6 +196,7 @@ Database migrations are handled via Supabase.
 ## 🗺 Roadmap
 
 - expand visualization capabilities
+- add customization of the system map and trace visualization
 - automate migrations
 - add a mock mode without backend
 - improve documentation

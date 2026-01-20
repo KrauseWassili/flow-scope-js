@@ -9,6 +9,7 @@ import { Profile } from "@/lib/auth/profile";
 import PeerSelect from "./PeerSelect";
 import { sendTraceEvent } from "@/lib/trace/sendTraceEvent";
 import { useMessengerSocket } from "@/context/MessengerSocketContext";
+import { supabase } from "@/lib/auth/supabaseClient";
 
 type Message = {
   id: string;
@@ -148,21 +149,45 @@ export default function ClientArea() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
-    const timeout = setTimeout(() => {
-      const traceId = crypto.randomUUID();
+  if (!user) return;
 
-      fetch(`/api/peers?selfId=${user.id}`, {
+  const timeout = setTimeout(async () => {
+    const traceId = crypto.randomUUID();
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const accessToken = session?.access_token;
+
+    if (!accessToken) {
+      console.error("No access token");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/peers?selfId=${user.id}`, {
         headers: {
+          "Authorization": `Bearer ${accessToken}`,
           "x-trace-id": traceId,
         },
-      })
-        .then((res) => res.json())
-        .then(setUsers)
-        .catch(console.error);
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [user]);
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      const users = await res.json();
+      setUsers(users);
+    } catch (err) {
+      console.error(err);
+    }
+  }, 100);
+
+  return () => clearTimeout(timeout);
+}, [user]);
+
 
   const handleSendMessage = (to: string, text: string) => {
     if (!socket || !user) return;
@@ -174,8 +199,6 @@ export default function ClientArea() {
       text,
       trace: { traceId, type: "MESSAGE" },
     });
-
-    
   };
 
   if (loading) {

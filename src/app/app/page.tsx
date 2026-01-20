@@ -19,46 +19,7 @@ export default function App() {
     console.log("HOME RENDER events length", events.length);
   }, [events]);
 
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      const method: "password" | "oauth" =
-        session?.user.app_metadata?.provider === "google"
-          ? "oauth"
-          : "password";
-
-      if (event === "SIGNED_IN" && session?.user) {
-        sendTraceEvent({
-          traceId: crypto.randomUUID(),
-          type: "USER_LOGIN",
-          node: "client_1",
-          actorId: session.user.id,
-          event: session.user.email
-            ? "login success"
-            : "login success (no email)",
-          payload: {
-            method,
-            email: session.user.email,
-          },
-          outcome: "success",
-          timestamp: Date.now(),
-        });
-      }
-      if (event === "SIGNED_OUT") {
-        sendTraceEvent({
-          traceId: crypto.randomUUID(),
-          type: "USER_LOGOUT",
-          node: "client_1",
-          actorId: session?.user?.id ?? "",
-          event: "logout",
-          outcome: "success",
-          timestamp: Date.now(),
-        });
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+  
 
 
   if (loading) {
