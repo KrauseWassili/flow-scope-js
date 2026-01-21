@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function Page() {
   return (
     <main className="flex flex-1 items-center justify-center px-6">
-      <div className="max-w-2xl w-full text-center space-y-8">
+      <div className="max-w-2xl w-full text-center space-y-8 pt-12">
         {/* Title */}
         <div className="space-y-3">
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
@@ -43,8 +43,8 @@ export default function Page() {
         </div>
 
         {/* Feature list */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 ">
-          <div className="text-right">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="text-center sm:text-right">
             <Feature
               title="Live & replay traces"
               description="Observe backend flows in real time or replay recorded traces step by step."
@@ -54,7 +54,8 @@ export default function Page() {
               description="Understand how events propagate through services and nodes."
             />
           </div>
-          <div className="text-left">
+
+          <div className="text-center sm:text-left">
             <Feature
               title="Event-level inspection"
               description="Inspect payloads, metadata and timing for each individual event."
@@ -68,7 +69,7 @@ export default function Page() {
 
         {/* Footer note */}
         <p className="text-xs text-title">
-          Open-source pet project exploring observability and tracing UI.
+          Open-source project exploring observability and tracing UI.
         </p>
       </div>
     </main>

@@ -77,9 +77,10 @@ export default function RootLayout({
         `}
       >
         <ClientProviders>
-          <div className="h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col">
             <Header />
-            {children}
+
+            <main className="flex-1 w-full overflow-x-hidden">{children}</main>
           </div>
         </ClientProviders>
       </body>

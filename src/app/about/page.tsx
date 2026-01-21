@@ -42,7 +42,7 @@ export default function Page() {
             behavior or failure.
           </p>
           <p className="text-value leading-relaxed">
-            FlowScope JS was created as a pet project to experiment with a
+            FlowScope JS was created as an experimental project to explore a
             different approach: treating traces as first-class, navigable
             timelines and providing direct access to individual events and their
             payloads.
@@ -101,7 +101,7 @@ export default function Page() {
 
         {/* Footer note */}
         <p className="text-xs text-title">
-          FlowScope JS is an open-source pet project built to explore ideas around
+          FlowScope JS is an open-source project built to explore ideas around
           tracing, observability, and developer tooling UX.
         </p>
       </div>

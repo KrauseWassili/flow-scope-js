@@ -41,10 +41,22 @@
   --font-mono: var(--font-geist-mono);
 }
 
-
 .btn-home {
-  @apply w-45 px-6 py-3 border border-foreground rounded-md transition-colors
-    bg-background text-foreground hover:bg-foreground hover:text-background active:scale-95;
+  @apply min-h-12
+    px-4 sm:px-6
+    py-2 sm:py-3
+    w-full sm:w-45
+    flex items-center justify-center
+    text-center
+    border border-foreground
+    rounded-md
+    transition-colors
+    bg-background
+    text-foreground
+    hover:bg-foreground
+    hover:text-background
+    active:scale-95;
+
   box-shadow: -1px 1px 1px 0 rgba(0, 0, 0, 0.35);
   text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.05);
 }
@@ -56,17 +68,16 @@
   text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.05);
 }
 
-
 .link-btn {
-  @apply h-10
+  @apply min-h-10
     flex items-center
     bg-transparent
     text-inactive
     hover:text-accent
-    text-2xl
+    text-sm sm:text-base lg:text-xl
     hover:scale-105
     transition-colors
-    p-2;
+    px-2 py-1 sm:px-3 sm:py-2;
 
   text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.35);
 }
