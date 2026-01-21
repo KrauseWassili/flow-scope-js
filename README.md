@@ -1,6 +1,6 @@
-# FlowScope.js
+# FlowScope JS
 
-**FlowScope.js** is a pet project that combines a real asynchronous system (a messenger) with an event-driven, real-time observability tool for visualizing backend process pipelines.
+**FlowScope JS** is a pet project that combines a real asynchronous system (a messenger) with an event-driven, real-time observability tool for visualizing backend process pipelines.
 
 The project makes asynchronous processes **observable, reproducible, and analyzable** in a clear and visual form.
 These traces can be replayed step by step, enabling reproducible debugging of asynchronous execution flows.
@@ -30,9 +30,9 @@ When developing asynchronous backend systems (WebSocket, events, queues, backgro
 - observe state changes step by step
 - analyze cause-and-effect relationships between processes
 
-FlowScope.js is built around an event-driven architecture where internal backend processes are represented as structured trace events. These events flow through an event pipeline (WebSocket → Redis Streams → Consumer → UI) and are visualized in real time and in replay mode.
+FlowScope JS is built around an event-driven architecture where internal backend processes are represented as structured trace events. These events flow through an event pipeline (WebSocket → Redis Streams → Consumer → UI) and are visualized in real time and in replay mode.
 
-**FlowScope.js addresses these challenges** by providing a tool to visualize internal backend processes in real time and in a replay mode.
+**FlowScope JS addresses these challenges** by providing a tool to visualize internal backend processes in real time and in a replay mode.
 
 ---
 
@@ -67,7 +67,7 @@ Diagnostic data can be sent from any part of the backend, where it is structured
 
 > Asynchronous, event-driven processes can be made transparent and observable.
 
-FlowScope.js demonstrates a trace-based observability approach where internal backend logic becomes clear and easy to explore, going beyond traditional logging.
+FlowScope JS demonstrates a trace-based observability approach where internal backend logic becomes clear and easy to explore, going beyond traditional logging.
 
 ---
 
@@ -228,5 +228,5 @@ MIT
 
 ## 🧠 Note
 
-FlowScope.js is a pet project whose goal is not to deliver a finished product,  
+FlowScope JS is a pet project whose goal is not to deliver a finished product,  
 but to explore asynchronous systems, architectural approaches, and methods for visual backend debugging.
