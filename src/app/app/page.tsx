@@ -14,7 +14,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-inactive">
+      <div className="h-full flex items-center justify-center text-inactive">
         Loading…
       </div>
     );

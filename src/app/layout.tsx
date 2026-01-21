@@ -85,7 +85,10 @@ export default function RootLayout({
       `}
       >
         <ClientProviders>
-          <div className="h-screen flex flex-col overflow-hidden">
+          <div
+            className="flex flex-col overflow-hidden"
+            style={{ height: "100dvh" }}
+          >
             <Header />
             <main className="flex-1 w-full overflow-hidden">{children}</main>
           </div>
