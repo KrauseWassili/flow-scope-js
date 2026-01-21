@@ -43,7 +43,7 @@ export default function UserStatus({ onSetTab }: UserStatusProps) {
   const initials = getInitials(user.email, name);
 
   return (
-    <div className="flex items-center gap-2 h-10 pl-2">
+    <div className="flex items-center gap-2 h-8 sm:h-10 pl-2">
       {/* Logout */}
 
       <button
