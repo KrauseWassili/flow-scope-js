@@ -73,27 +73,34 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body
-        className={`
+  <html lang="en">
+    <body
+      className={`
         ${geistSans.variable}
         ${geistMono.variable}
         antialiased
-        h-full
         bg-zinc-950
         text-zinc-100
+        overflow-hidden
       `}
-      >
-        <ClientProviders>
-          <div
-            className="flex flex-col overflow-hidden"
-            style={{ height: "100dvh" }}
-          >
+    >
+      <ClientProviders>
+        <div className="relative flex flex-col h-screen">
+
+          {/* FIXED HEADER */}
+          <div className="shrink-0">
             <Header />
-            <main className="flex-1 w-full overflow-hidden">{children}</main>
           </div>
-        </ClientProviders>
-      </body>
-    </html>
-  );
+
+          {/* SCROLLABLE PAGE */}
+          <main className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+            {children}
+          </main>
+
+        </div>
+      </ClientProviders>
+    </body>
+  </html>
+);
+
 }

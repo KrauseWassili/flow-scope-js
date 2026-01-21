@@ -69,15 +69,21 @@
 }
 
 .link-btn {
-  @apply min-h-10
-    flex items-center
+  @apply flex items-center justify-center
     bg-transparent
     text-inactive
     hover:text-accent
     text-sm sm:text-base lg:text-xl
-    hover:scale-105
+    px-3
     transition-colors
-    px-2 py-1 sm:px-3 sm:py-2;
+    transform
+    transition-transform
+    hover:scale-105;
+
+  height: 40px;
+  line-height: 1;
+  will-change: transform;
+  overflow: hidden;
 
   text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.35);
 }
@@ -92,7 +98,6 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-
 body {
   background: var(--color-background);
   color: var(--color-foreground);
@@ -102,10 +107,10 @@ body {
   min-height: 100vh;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;   /* ← не hidden */
+  overflow-x: auto; /* ← не hidden */
   overscroll-behavior-x: contain;
 }
-

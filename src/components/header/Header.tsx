@@ -4,8 +4,8 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="w-full bg-header  overflow-x-hidden">
-      {/* Контейнер контента */}
+    <header className="w-full bg-header overflow-visible">
+     
       <div className="mx-auto flex flex-col sm:flex-row items-center px-2">
 
         {/* LEFT */}
