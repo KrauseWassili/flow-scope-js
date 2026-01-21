@@ -15,7 +15,7 @@ export default function PeerSelect({
 }: ContactSelectProps) {
   return (
     <select
-      className="btn w-35! bg-inactive!"
+      className="btn sm:w-35! bg-inactive!"
       value={value ?? ""}
       onChange={(e) => {
         const v = e.target.value;

@@ -211,7 +211,7 @@ export default function ClientArea() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex gap-2 border-border border-b p-4 shrink-0 bg-panel">
+      <div className="flex items-center gap-2 border-border border-b p-4 shrink-0 bg-panel">
         <button onClick={() => setTab("messenger")} className="btn">
           Messenger
         </button>

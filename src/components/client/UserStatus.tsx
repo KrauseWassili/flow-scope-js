@@ -63,13 +63,13 @@ export default function UserStatus({ onSetTab }: UserStatusProps) {
           style={{
             filter: "drop-shadow(-1px 1px 1px rgba(0,0,0,0.55))",
           }}
-          className="h-10 w-10 border-active border rounded-full object-cover"
+          className="h-8 sm:h-10 w-8 sm:w-10 border-active border rounded-full object-cover"
           referrerPolicy="no-referrer"
         />
       ) : (
         <div
           style={{ boxShadow: "-1px 1px 1px 0 rgba(0,0,0,0.15)" }}
-          className="h-10 w-10 border-active border rounded-full bg-background flex items-center justify-center"
+          className="h-8 sm:h-10 w-8 sm:w-10 border-active border rounded-full bg-background flex items-center justify-center"
         >
           {initials}
         </div>
@@ -77,7 +77,7 @@ export default function UserStatus({ onSetTab }: UserStatusProps) {
 
       <span
         style={{ textShadow: "-1px 1px 1px rgba(0,0,0,0.15)" }}
-        className="h-10 w-10 flex items-center opacity-70 break-all w-35"
+        className="hidden sm:flex items-center opacity-70 break-all"
       >
         {name ?? user.email?.split("@")[0]}
       </span>
