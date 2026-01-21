@@ -60,7 +60,7 @@ function PipelineRail({
   const nodeState = getLampStates(events);
 
   return (
-    <div className="flex items-end gap-6 min-h-14">
+    <div className="flex items-end gap-6 min-h-14 w-max">
       {SYSTEM_NODES.map((node) => {
         const s = nodeState[node];
         const isActive = s?.wasActive;
@@ -150,7 +150,7 @@ export default function TraceTimeline({
         </div>
       ) : (
         <div className="flex-1 min-h-0 min-w-0 overflow-auto">
-          <ul className="divide-y divide-border">
+          <ul className="min-w-max divide-y divide-border">
             {Object.entries(eventsByTrace).map(([traceId, traceEvents]) => {
               const isActiveRow =
                 mode === "replay" && activeEvent?.traceId === traceId;
@@ -163,7 +163,7 @@ export default function TraceTimeline({
                 <li
                   key={traceId}
                   className={cn(
-                    "px-2 py-2 transition-colors min-w-0",
+                    "px-2 py-2 transition-colors min-w-max",
                     mode === "replay" && "cursor-pointer hover:bg-amber-100",
                     isActiveRow && "bg-amber-200"
                   )}

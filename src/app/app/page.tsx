@@ -27,12 +27,12 @@ export default function App() {
         <div className="grid grid-cols-[1fr_2fr] min-w-100 h-full">
 
           {/* LEFT */}
-          <div className="flex flex-col border-border border-r min-w-170 min-h-0 h-full shrink-0 overflow-hidden">
+          <div className="flex flex-col border-border border-r min-w-100 sm:min-w-170 min-h-0 h-full shrink-0 overflow-hidden">
             <ClientArea />
           </div>
 
           {/* RIGHT */}
-          <div className="flex flex-col min-w-230 min-h-0 h-full shrink-0 overflow-hidden">
+          <div className="flex flex-col min-w-200 sm:min-w-230 min-h-0 h-full shrink-0 overflow-hidden">
             <ObservationArea events={events} onClearEvents={clearEvents} />
           </div>
 
