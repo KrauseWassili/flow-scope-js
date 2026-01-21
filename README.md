@@ -1,6 +1,6 @@
 # FlowScope JS
 
-**FlowScope JS** is a pet project that combines a real asynchronous system (a messenger) with an event-driven, real-time observability tool for visualizing backend process pipelines.
+**FlowScope JS** is a personal engineering project that combines a real asynchronous system (a messenger) with an event-driven, real-time observability tool for visualizing backend process pipelines.
 
 The project makes asynchronous processes **observable, reproducible, and analyzable** in a clear and visual form.
 These traces can be replayed step by step, enabling reproducible debugging of asynchronous execution flows.
@@ -201,10 +201,9 @@ Database migrations are handled via Supabase.
 
 ## ⚠️ Project Limitations
 
-- not production-ready
-- not optimized for high load
-- backend availability may be limited
-- intended for research, experimentation, and architectural demonstration
+- designed as an experimental and architectural showcase project
+- not optimized for high load or production traffic
+- backend availability may be limited due to demo hosting environment
 
 ---
 
@@ -228,5 +227,5 @@ MIT
 
 ## 🧠 Note
 
-FlowScope JS is a pet project whose goal is not to deliver a finished product,  
+FlowScope JS is a personal engineering project whose goal is not to deliver a finished product,  
 but to explore asynchronous systems, architectural approaches, and methods for visual backend debugging.
