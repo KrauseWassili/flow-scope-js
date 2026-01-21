@@ -3,7 +3,7 @@ export default function Page() {
     <main className="flex flex-1 items-center justify-center px-6">
       <div className="max-w-3xl w-full space-y-4">
         {/* Title */}
-        <div className="space-y-3">
+        <div className="space-y-3 pt-12">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
             About FlowScope JS
           </h1>

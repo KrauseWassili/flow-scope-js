@@ -57,6 +57,14 @@ export const metadata: Metadata = {
     description: "Inspect backend flows and traces",
     images: ["/og-image-1200x630.png"],
   },
+
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    minimumScale: 0.5,
+    maximumScale: 3,
+    userScalable: true,
+  },
 };
 
 export default function RootLayout({
@@ -68,19 +76,18 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body
         className={`
-          ${geistSans.variable}
-          ${geistMono.variable}
-          antialiased
-          h-full
-          bg-zinc-950
-          text-zinc-100
-        `}
+        ${geistSans.variable}
+        ${geistMono.variable}
+        antialiased
+        h-full
+        bg-zinc-950
+        text-zinc-100
+      `}
       >
         <ClientProviders>
-          <div className="min-h-screen flex flex-col">
+          <div className="h-screen flex flex-col overflow-hidden">
             <Header />
-
-            <main className="flex-1 w-full overflow-x-hidden">{children}</main>
+            <main className="flex-1 w-full overflow-hidden">{children}</main>
           </div>
         </ClientProviders>
       </body>
