@@ -33,7 +33,7 @@ export default function Page() {
           </Link>
 
           <a
-            href="https://github.com/KrauseWassili/FlowScopeJS"
+            href="https://github.com/KrauseWassili/flowscope-js"
             target="_blank"
             rel="noreferrer"
             className="btn-home bg-foreground! text-background! hover:bg-background! hover:text-foreground!"
