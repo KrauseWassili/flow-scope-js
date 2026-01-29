@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       "x-trace-secret": TRACE_INGEST_SECRET,
     },
     body: JSON.stringify(parsed.data),
-    signal: AbortSignal.timeout(2000),
+    signal: AbortSignal.timeout(5000),
   }).catch((err) => {
     console.error("[API][TRACE] forward failed", err?.message ?? err);
   });
