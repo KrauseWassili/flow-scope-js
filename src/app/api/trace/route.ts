@@ -40,19 +40,34 @@ export async function POST(req: Request) {
   const { traceId, type } = parsed.data;
   console.log("[API][TRACE] forward", traceId, type);
 
-  // 🔒 server → server, with secret
-  fetch(TRACE_INGEST_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-trace-secret": TRACE_INGEST_SECRET,
-    },
-    body: JSON.stringify(parsed.data),
-    signal: AbortSignal.timeout(5000),
-  }).catch((err) => {
-    console.error("[API][TRACE] forward failed", err?.message ?? err);
-  });
+  let res: Response;
 
-  // best-effort
+  try {
+    res = await fetch(TRACE_INGEST_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-trace-secret": TRACE_INGEST_SECRET,
+      },
+      body: JSON.stringify(parsed.data),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (err: any) {
+    console.error("[API][TRACE] forward failed", err?.message ?? err);
+    return NextResponse.json(
+      { ok: false, reason: "ingest_unreachable" },
+      { status: 502 },
+    );
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("[API][TRACE] ingest rejected", text);
+    return NextResponse.json(
+      { ok: false, reason: "ingest_rejected" },
+      { status: 502 },
+    );
+  }
+
   return NextResponse.json({ ok: true, traceId });
 }
