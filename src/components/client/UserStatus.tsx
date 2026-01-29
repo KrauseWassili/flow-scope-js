@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/lib/auth/supabaseClient";
+import { supabaseClient } from "@/lib/auth/supabaseClient";
 
 type UserStatusProps = {
   onSetTab: () => void;
@@ -49,7 +49,7 @@ export default function UserStatus({ onSetTab }: UserStatusProps) {
       <button
         className="btn"
         onClick={async () => {
-          await supabase.auth.signOut();
+          await supabaseClient.auth.signOut();
         }}
       >
         Logout

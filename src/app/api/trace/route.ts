@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { isEventType } from "@/lib/events/guards/isEventType";
 import { eventSchemas } from "@/lib/trace/sсhemas";
 
-const NEXT_PUBLIC_WS_URL = process.env.NEXT_PUBLIC_WS_URL;
+const TRACE_INGEST_URL = process.env.TRACE_INGEST_URL;
+const TRACE_INGEST_SECRET = process.env.TRACE_INGEST_SECRET;
 
 export async function POST(req: Request) {
-  
-  if (!NEXT_PUBLIC_WS_URL) {
-    console.error("[API][TRACE] NEXT_PUBLIC_WS_URL is not defined");
+  console.log("🔥 [API][TRACE] HIT");
+  if (!TRACE_INGEST_URL || !TRACE_INGEST_SECRET) {
+    console.error("[API][TRACE] ingest is not configured");
     return NextResponse.json({ ok: false, reason: "trace_disabled" });
   }
 
@@ -33,28 +34,25 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: false,
       reason: "schema_validation_failed",
-      details: parsed.error.format(),
     });
   }
 
   const { traceId, type } = parsed.data;
-  console.log("[API][TRACE INGEST]:", traceId, type);
+  console.log("[API][TRACE] forward", traceId, type);
 
-  console.log("[API][TRACE] forwarding to:", `${NEXT_PUBLIC_WS_URL}/trace`);
-
-  console.log("[API][TRACE] will forward trace", {
-    traceId,
-    type,
-  });
-
-  fetch(`${NEXT_PUBLIC_WS_URL}/trace`, {
+  // 🔒 server → server, with secret
+  fetch(TRACE_INGEST_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-trace-secret": TRACE_INGEST_SECRET,
+    },
     body: JSON.stringify(parsed.data),
     signal: AbortSignal.timeout(2000),
   }).catch((err) => {
-    console.error("[API][TRACE FORWARD ERROR]", err?.message ?? err);
+    console.error("[API][TRACE] forward failed", err?.message ?? err);
   });
 
+  // best-effort
   return NextResponse.json({ ok: true, traceId });
 }

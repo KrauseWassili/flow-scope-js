@@ -45,7 +45,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     console.log("🔌 creating EVENTS socket:", socketUrl);
 
     const s = io(socketUrl, {
-      path: "/events/socket.io", // 👈 соответствует Caddy
+      path: "/events/socket.io", 
       transports: ["websocket"],
       auth: { token: session.access_token },
     });

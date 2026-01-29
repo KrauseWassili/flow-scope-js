@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/auth/supabaseClient";
+import { supabaseClient } from "@/lib/auth/supabaseClient";
 import { sendTraceEvent } from "@/lib/trace/sendTraceEvent";
 
 type AuthCtx = {
@@ -27,13 +27,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const prevUserRef = useRef<User | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabaseClient.auth.getSession().then(({ data }) => {
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+    const { data: sub } = supabaseClient.auth.onAuthStateChange((event, s) => {
       console.log("AUTH EVENT", event, s);
       setSession(s);
       setUser(s?.user ?? null);

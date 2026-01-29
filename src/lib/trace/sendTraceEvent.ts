@@ -8,7 +8,7 @@ function resolveTraceUrl(): string {
 
   // 🟢 Server (Next / Node / Docker)
   const base =
-    process.env.TRACE_API_BASE_URL || 
+    process.env.TRACE_API_BASE_URL ||
     process.env.NEXT_PUBLIC_BASE_URL || // fallback
     "http://localhost:3000";
 
@@ -18,13 +18,12 @@ function resolveTraceUrl(): string {
 export function sendTraceEvent(event: TraceEvent): void {
   const url = resolveTraceUrl();
 
- 
-  console.log("[TRACE][SEND]", {
-    runtime: typeof window !== "undefined" ? "browser" : "server",
-    url,
-    type: event.type,
-    traceId: event.traceId,
-  });
+  // console.log("[TRACE][SEND]", {
+  //   runtime: typeof window !== "undefined" ? "browser" : "server",
+  //   url,
+  //   type: event.type,
+  //   traceId: event.traceId,
+  // });
 
   // 🟢 Browser — sendBeacon
   if (typeof window !== "undefined") {
@@ -33,7 +32,7 @@ export function sendTraceEvent(event: TraceEvent): void {
         url,
         new Blob([JSON.stringify(event)], {
           type: "application/json",
-        })
+        }),
       );
     } catch (err) {
       console.error("[TRACE] sendBeacon error", err);
@@ -46,7 +45,6 @@ export function sendTraceEvent(event: TraceEvent): void {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(event),
-  }).catch((err) => {
-    console.error("[TRACE] server fetch failed", err);
-  });
+    signal: AbortSignal.timeout(2000),
+  }).catch(() => {});
 }

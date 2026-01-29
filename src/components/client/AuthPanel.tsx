@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/auth/supabaseClient";
+import { supabaseClient } from "@/lib/auth/supabaseClient";
 import { sendTraceEvent } from "@/lib/trace/sendTraceEvent";
 
 type AuthPanelProps = {
@@ -20,7 +20,7 @@ export default function AuthPanel({ setTab }: AuthPanelProps) {
     setBusy(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/app`,
@@ -41,8 +41,8 @@ export default function AuthPanel({ setTab }: AuthPanelProps) {
 
     const { error } =
       mode === "login"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        ? await supabaseClient.auth.signInWithPassword({ email, password })
+        : await supabaseClient.auth.signUp({ email, password });
 
     if (error) {
       sendTraceEvent({

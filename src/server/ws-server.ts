@@ -6,6 +6,12 @@ import { Server } from "socket.io";
 import Redis from "ioredis";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { getHeader } from "./lib/http/headers";
+import { timingSafeEqual } from "./lib/http/timingSafeEqual";
+import { readJsonBodyWithLimit } from "./lib/http/readJsonBodyWithLimit";
+import { isEventType } from "./lib/events/guards/isEventType";
+import { eventSchemas } from "./lib/trace/sсhemas";
+import { createClient } from "@supabase/supabase-js";
 
 /* =========================
    Redis
@@ -104,24 +110,17 @@ async function startObservabilityConsumer(eventsIO: Server) {
       10,
       "STREAMS",
       STREAM,
-      "0"
+      "0",
     );
 
     if (pending) {
-      console.log(
-        "🟡 [OBS] draining pending events:",
-        pending[0][1].length
-      );
+      console.log("🟡 [OBS] draining pending events:", pending[0][1].length);
 
       for (const [, events] of pending) {
         for (const [id, fields] of events) {
           const event = mapFields(fields);
 
-          console.log(
-            "🟡 [OBS] emit pending event",
-            event.type,
-            event.traceId
-          );
+          console.log("🟡 [OBS] emit pending event", event.type, event.traceId);
 
           eventsIO.emit("system:event", event);
           await redisObs.xack(STREAM, GROUP, id);
@@ -148,7 +147,7 @@ async function startObservabilityConsumer(eventsIO: Server) {
         10,
         "STREAMS",
         STREAM,
-        ">"
+        ">",
       );
 
       if (!res) continue;
@@ -157,11 +156,7 @@ async function startObservabilityConsumer(eventsIO: Server) {
         for (const [id, fields] of events) {
           const event = mapFields(fields);
 
-          console.log(
-            "🟢 [OBS] emit event",
-            event.type,
-            event.traceId
-          );
+          console.log("🟢 [OBS] emit event", event.type, event.traceId);
 
           eventsIO.emit("system:event", event);
           await redisObs.xack(STREAM, GROUP, id);
@@ -174,20 +169,32 @@ async function startObservabilityConsumer(eventsIO: Server) {
   }
 }
 
-
 /* =========================
    Shared socket auth middleware
 ========================= */
 
-function socketAuth(socket: any, next: any) {
-  const token = socket.handshake.auth?.token;
-  if (!token) return next(new Error("No token"));
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // server-only
+);
 
-  const decoded = jwt.decode(token) as any;
-  if (!decoded?.sub) return next(new Error("Invalid token"));
+async function socketAuth(socket: any, next: any) {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error("No token"));
 
-  socket.data.userId = decoded.sub;
-  next();
+    const { data, error } = await supabase.auth.getUser(token);
+
+    if (error || !data.user) {
+      return next(new Error("Invalid token"));
+    }
+
+    socket.data.userId = data.user.id;
+    next();
+  } catch (err) {
+    console.error("[WS AUTH] failed", err);
+    return next(new Error("Auth failed"));
+  }
 }
 
 /* =========================
@@ -243,7 +250,7 @@ messengerIO.on("connection", (socket: any) => {
         const stream = dialogKey(userId, peerId);
         const last = await redisChat.xrevrange(stream, "+", "-", "COUNT", 1);
         const unread = Number(
-          (await redisChat.get(unreadKey(userId, peerId))) ?? 0
+          (await redisChat.get(unreadKey(userId, peerId))) ?? 0,
         );
 
         if (last.length) {
@@ -275,7 +282,7 @@ messengerIO.on("connection", (socket: any) => {
           "+",
           "-",
           "COUNT",
-          limit
+          limit,
         );
 
         const messages = history
@@ -307,7 +314,7 @@ messengerIO.on("connection", (socket: any) => {
         // eslint-disable-next-line no-console
         console.error("dialog:open error:", e);
       }
-    }
+    },
   );
 
   /* ---- dialog:clear ---- */
@@ -329,48 +336,48 @@ messengerIO.on("connection", (socket: any) => {
 
   /* ---- message:send (без логических изменений) ---- */
   socket.on(
-  "message:send",
-  async ({
-    to,
-    text,
-    trace,
-  }: {
-    to: string;
-    text: string;
-    trace?: { traceId: string };
-  }) => {
-    const traceId = trace?.traceId || crypto.randomUUID();
-    const type = "MESSAGE";
-
-    console.log("[WS][CHAT] message:send recv", {
-      socketId: socket.id,
-      userId,
+    "message:send",
+    async ({
       to,
-      textLen: text?.length,
-    });
+      text,
+      trace,
+    }: {
+      to: string;
+      text: string;
+      trace?: { traceId: string };
+    }) => {
+      const traceId = trace?.traceId || crypto.randomUUID();
+      const type = "MESSAGE";
 
-    /* =========================
+      console.log("[WS][CHAT] message:send recv", {
+        socketId: socket.id,
+        userId,
+        to,
+        textLen: text?.length,
+      });
+
+      /* =========================
        ❌ VALIDATION
        ========================= */
-    if (!to || !text) {
-      sendTraceEvent({
-        traceId,
-        type,
-        node: "ws",
-        actorId: userId,
-        dialogId: to ? `${userId}:${to}` : undefined,
-        outcome: "error",
-        timestamp: Date.now(),
-        payload: { text },
-        error: { message: "Missing 'to' or 'text' in message" },
-      });
-      return;
-    }
+      if (!to || !text) {
+        sendTraceEvent({
+          traceId,
+          type,
+          node: "ws",
+          actorId: userId,
+          dialogId: to ? `${userId}:${to}` : undefined,
+          outcome: "error",
+          timestamp: Date.now(),
+          payload: { text },
+          error: { message: "Missing 'to' or 'text' in message" },
+        });
+        return;
+      }
 
-    /* =========================
+      /* =========================
        🟢 PHASE 1: CLIENT INTENT (ingress)
        ========================= */
-    sendTraceEvent({
+      sendTraceEvent({
         traceId,
         type: "MESSAGE",
         node: "client_1",
@@ -381,133 +388,132 @@ messengerIO.on("connection", (socket: any) => {
         timestamp: Date.now(),
       });
 
-    /* =========================
+      /* =========================
        🔀 PHASE BOUNDARY
        ========================= */
-    await Promise.resolve();
-    // ↑ гарантированная граница фаз (microtask)
+      await Promise.resolve();
+      // ↑ гарантированная граница фаз (microtask)
 
-    /* =========================
+      /* =========================
        🟢 PHASE 2: WS PROCESSING
        ========================= */
-    sendTraceEvent({
-      traceId,
-      type,
-      node: "ws",
-      actorId: userId,
-      dialogId: `${userId}:${to}`,
-      outcome: "success",
-      timestamp: Date.now(),
-      payload: { text: "Server" },
-    });
+      sendTraceEvent({
+        traceId,
+        type,
+        node: "ws",
+        actorId: userId,
+        dialogId: `${userId}:${to}`,
+        outcome: "success",
+        timestamp: Date.now(),
+        payload: { text: "Server" },
+      });
 
-    const timestamp = new Date().toISOString();
-    const stream = dialogKey(userId, to);
+      const timestamp = new Date().toISOString();
+      const stream = dialogKey(userId, to);
 
-    let messageId: string;
+      let messageId: string;
 
-    try {
-      /* =========================
+      try {
+        /* =========================
          🟢 REDIS WRITE
          ========================= */
-      const id = await redisChat.xadd(
-        stream,
-        "*",
-        "from",
-        userId,
-        "to",
-        to,
-        "text",
-        text,
-        "timestamp",
-        timestamp
-      );
+        const id = await redisChat.xadd(
+          stream,
+          "*",
+          "from",
+          userId,
+          "to",
+          to,
+          "text",
+          text,
+          "timestamp",
+          timestamp,
+        );
 
-      if (!id) {
-        throw new Error("Redis xadd returned null");
+        if (!id) {
+          throw new Error("Redis xadd returned null");
+        }
+        messageId = id;
+
+        console.log("[WS][CHAT] redis xadd ok", {
+          stream,
+          id: messageId,
+        });
+
+        await redisChat.sadd(dialogsSet(userId), to);
+        await redisChat.sadd(dialogsSet(to), userId);
+        await redisChat.incr(unreadKey(to, userId));
+
+        sendTraceEvent({
+          traceId,
+          type,
+          node: "redis",
+          actorId: userId,
+          dialogId: `${userId}:${to}`,
+          outcome: "success",
+          timestamp: Date.now(),
+          payload: { text },
+        });
+      } catch (redisErr: any) {
+        sendTraceEvent({
+          traceId,
+          type,
+          node: "redis",
+          actorId: userId,
+          dialogId: `${userId}:${to}`,
+          outcome: "error",
+          timestamp: Date.now(),
+          payload: { text },
+          error: { message: redisErr.message },
+        });
+        return;
       }
-      messageId = id;
 
-      console.log("[WS][CHAT] redis xadd ok", {
-        stream,
-        id: messageId,
-      });
-
-      await redisChat.sadd(dialogsSet(userId), to);
-      await redisChat.sadd(dialogsSet(to), userId);
-      await redisChat.incr(unreadKey(to, userId));
-
-      sendTraceEvent({
-        traceId,
-        type,
-        node: "redis",
-        actorId: userId,
-        dialogId: `${userId}:${to}`,
-        outcome: "success",
-        timestamp: Date.now(),
-        payload: { text },
-      });
-    } catch (redisErr: any) {
-      sendTraceEvent({
-        traceId,
-        type,
-        node: "redis",
-        actorId: userId,
-        dialogId: `${userId}:${to}`,
-        outcome: "error",
-        timestamp: Date.now(),
-        payload: { text },
-        error: { message: redisErr.message },
-      });
-      return;
-    }
-
-    /* =========================
+      /* =========================
        🟢 EMIT TO CLIENTS
        ========================= */
-    const message = {
-      id: messageId,
-      from: userId,
-      to,
-      text,
-      timestamp,
-    };
+      const message = {
+        id: messageId,
+        from: userId,
+        to,
+        text,
+        timestamp,
+      };
 
-    console.log("[WS][CHAT] emit message:new", {
-      toRooms: [userId, to],
-      messageId,
-    });
-
-    try {
-      messengerIO.to(userId).emit("message:new", message);
-      messengerIO.to(to).emit("message:new", message);
-
-      sendTraceEvent({
-        traceId,
-        type,
-        node: "client_2",
-        actorId: userId,
-        dialogId: `${userId}:${to}`,
-        outcome: "success",
-        timestamp: Date.now(),
-        payload: { text },
+      console.log("[WS][CHAT] emit message:new", {
+        toRooms: [userId, to],
+        messageId,
       });
-    } catch (emitErr: any) {
-      sendTraceEvent({
-        traceId,
-        type,
-        node: "client_receive",
-        actorId: userId,
-        dialogId: `${userId}:${to}`,
-        outcome: "error",
-        timestamp: Date.now(),
-        payload: { text },
-        error: { message: emitErr.message },
-      });
-    }
-  }
-);
 
+      try {
+        messengerIO.to(userId).emit("message:new", message);
+        messengerIO.to(to).emit("message:new", message);
+
+        sendTraceEvent({
+          traceId,
+          type,
+          node: "client_2",
+          actorId: userId,
+          dialogId: `${userId}:${to}`,
+          outcome: "success",
+          timestamp: Date.now(),
+          payload: { text },
+        });
+      } catch (emitErr: any) {
+        sendTraceEvent({
+          traceId,
+          type,
+          node: "client_receive",
+          actorId: userId,
+          dialogId: `${userId}:${to}`,
+          outcome: "error",
+          timestamp: Date.now(),
+          payload: { text },
+          error: { message: emitErr.message },
+        });
+      }
+    },
+  );
 });
 
 /* =========================
@@ -516,7 +522,7 @@ messengerIO.on("connection", (socket: any) => {
 
 const WS_EVENTS_PORT = +(process.env.WS_EVENTS_PORT || 4001);
 
-const eventsHttpServer = createServer((req, res) => {
+const eventsHttpServer = createServer(async (req, res) => {
   // health
   if (req.method === "GET" && (req.url === "/" || req.url === "/health")) {
     res.writeHead(200, { "Content-Type": "text/plain" });
@@ -524,42 +530,90 @@ const eventsHttpServer = createServer((req, res) => {
     return;
   }
 
-  // trace ingest (только events-сервер!)
+  // trace ingest (SECURED)
   if (req.method === "POST" && req.url?.startsWith("/trace")) {
-    console.log("🟡 [EVENTS][TRACE] incoming request");
-    let body = "";
+    // AUTH: shared secret
+    const secret = process.env.TRACE_INGEST_SECRET;
 
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
+    if (!secret) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason: "trace_ingest_disabled" }));
+      return;
+    }
 
-    req.on("end", async () => {
-      try {
-        const event = JSON.parse(body);
+    const provided = getHeader(req, "x-trace-secret");
+    if (!provided || !timingSafeEqual(provided, secret)) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason: "unauthorized" }));
+      return;
+    }
 
-        console.log("🟡 [EVENTS][TRACE] parsed event", {
-          type: event.type,
-          traceId: event.traceId,
-        });
+    // SAFE BODY READ
+    let body: unknown;
+    const limit = +(process.env.TRACE_BODY_LIMIT || 65536); // 64KB
 
-        const id = await redisObs.xadd(
-          STREAM,
-          "*",
-          "event",
-          JSON.stringify(event)
-        );
+    try {
+      body = await readJsonBodyWithLimit(req, limit, 1500);
+    } catch (err: any) {
+      const reason =
+        err?.message === "body_too_large"
+          ? "body_too_large"
+          : err?.message === "body_timeout"
+            ? "body_timeout"
+            : err?.message === "invalid_json"
+              ? "invalid_json"
+              : "bad_request";
 
-        console.log("🟢 [EVENTS][TRACE] xadd OK", id);
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason }));
+      return;
+    }
 
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: true }));
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("[EVENTS][TRACE] error:", err);
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Invalid trace payload" }));
-      }
-    });
+    // SHAPE CHECK
+    if (typeof body !== "object" || body === null || !("type" in body)) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason: "invalid_body" }));
+      return;
+    }
+
+    const rawType = (body as any).type;
+    if (!isEventType(rawType)) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason: "unknown_event_type" }));
+      return;
+    }
+
+    // SCHEMA VALIDATION
+    const schema = eventSchemas[rawType];
+    const parsed = schema.safeParse(body);
+
+    if (!parsed.success) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          ok: false,
+          reason: "schema_validation_failed",
+        }),
+      );
+      return;
+    }
+
+    // REDIS WRITE
+    try {
+      const id = await redisObs.xadd(
+        STREAM,
+        "*",
+        "event",
+        JSON.stringify(parsed.data),
+      );
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, id }));
+    } catch (err) {
+      console.error("[EVENTS][TRACE] redis error:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason: "redis_write_failed" }));
+    }
 
     return;
   }

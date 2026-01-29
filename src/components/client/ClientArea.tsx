@@ -9,7 +9,7 @@ import { Profile } from "@/lib/auth/profile";
 import PeerSelect from "./PeerSelect";
 import { sendTraceEvent } from "@/lib/trace/sendTraceEvent";
 import { useMessengerSocket } from "@/context/MessengerSocketContext";
-import { supabase } from "@/lib/auth/supabaseClient";
+import { supabaseClient } from "@/lib/auth/supabaseClient";
 
 type Message = {
   id: string;
@@ -156,7 +156,7 @@ export default function ClientArea() {
 
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } = await supabaseClient.auth.getSession();
 
     const accessToken = session?.access_token;
 
