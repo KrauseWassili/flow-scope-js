@@ -548,6 +548,28 @@ const eventsHttpServer = createServer(async (req, res) => {
       return;
     }
 
+    // RATE LIMIT (per IP)
+    const ip =
+      getHeader(req, "x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.socket.remoteAddress ||
+      "unknown";
+
+    const WINDOW_SEC = 60;
+    const LIMIT = 100;
+
+    const key = `trace:rl:${ip}`;
+    const count = await redisObs.incr(key);
+
+    if (count === 1) {
+      await redisObs.expire(key, WINDOW_SEC);
+    }
+
+    if (count > LIMIT) {
+      res.writeHead(429, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: false, reason: "rate_limited" }));
+      return;
+    }
+
     // SAFE BODY READ
     let body: unknown;
     const limit = +(process.env.TRACE_BODY_LIMIT || 65536); // 64KB
